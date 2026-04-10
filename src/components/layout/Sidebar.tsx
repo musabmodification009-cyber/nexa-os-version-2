@@ -12,6 +12,7 @@ import {
   Settings,
   ChevronRight,
   HelpCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ const navGroups: NavGroup[] = [
     label: "Operations",
     items: [
       { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
+      { label: "Sales", href: "/app/sales", icon: ShoppingCart },
       { label: "Catalog", href: "/app/catalog", icon: Package },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight, permKey: "canLogMovements" },
       { label: "Locations", href: "/app/locations", icon: MapPin },
