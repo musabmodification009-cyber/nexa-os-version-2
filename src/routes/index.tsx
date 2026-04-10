@@ -352,6 +352,10 @@ function LandingPage() {
   };
 
   return (
+    <>
+    {showOnboarding && (
+      <BusinessOnboarding onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} />
+    )}
     <div className="min-h-screen bg-background text-foreground">
       <StickyNav onTryDemo={handleTryDemo} />
 
