@@ -7,7 +7,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import type { Item } from "@/types/inventory";
+import type { Item, SaleTransaction } from "@/types/inventory";
+import { useDemo } from "@/hooks/useDemo";
 import { toast } from "sonner";
 
 const USD_TO_NGN = 1_580;
@@ -33,9 +34,27 @@ function fmtNgn(usd: number, qty: number = 1): string {
 }
 
 export function SalesCart({ open, onOpenChange, items, onAdd, onRemove, onClear }: SalesCartProps) {
+  const { demoStore, bumpVersion } = useDemo();
   const total = items.reduce((s, ci) => s + ci.item.sellingPrice * USD_TO_NGN * ci.quantity, 0);
 
   const handleCheckout = () => {
+    if (demoStore) {
+      const sale: SaleTransaction = {
+        id: `sale-${Date.now()}`,
+        items: items.map((ci) => ({
+          itemId: ci.item.id,
+          itemName: ci.item.name,
+          sku: ci.item.sku,
+          quantity: ci.quantity,
+          unitPriceNgn: ci.item.sellingPrice * USD_TO_NGN,
+          imageUrl: ci.item.imageUrl ?? undefined,
+        })),
+        totalNgn: total,
+        createdAt: new Date().toISOString(),
+      };
+      demoStore.addSale(sale);
+      bumpVersion();
+    }
     toast.success(`Sale recorded — ${NAIRA}${total.toLocaleString("en-NG", { minimumFractionDigits: 0 })}`);
     onClear();
     onOpenChange(false);

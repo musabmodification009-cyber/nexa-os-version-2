@@ -7,6 +7,7 @@ import type {
   PurchaseOrder,
   InventoryRequest,
   Notification,
+  SaleTransaction,
 } from "@/types/inventory";
 import { MovementType } from "@/types/inventory";
 import { generateSeedData, type SeedData } from "./demo/index";
@@ -47,6 +48,7 @@ export class DemoStore {
   private data: SeedData;
   private version = 0;
   private users: DemoUser[] = SEED_USERS.map((u) => ({ ...u }));
+  private sales: SaleTransaction[] = [];
 
   constructor() {
     this.data = generateSeedData();
@@ -59,6 +61,19 @@ export class DemoStore {
   reset() {
     this.data = generateSeedData();
     this.users = SEED_USERS.map((u) => ({ ...u }));
+    this.sales = [];
+    this.version++;
+  }
+
+  // ─── Sales ─────────────────────────────────────────────
+  getSales(): SaleTransaction[] {
+    return [...this.sales].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }
+
+  addSale(sale: SaleTransaction): void {
+    this.sales.push(sale);
     this.version++;
   }
 

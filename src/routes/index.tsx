@@ -336,7 +336,7 @@ function LandingPage() {
   };
 
   const handleOnboardingComplete = (_businessType: string, _categories: string[]) => {
-    enterDemoMode();
+    enterDemoMode({ businessType: _businessType, categories: _categories });
     localStorage.setItem("stackwise-onboarding-done", "true");
     localStorage.setItem("stackwise-business-type", _businessType);
     localStorage.setItem("stackwise-categories", JSON.stringify(_categories));

@@ -4,6 +4,7 @@ import type { UserRoleType } from "@/lib/roles";
 const ROUTE_ACCESS: Record<string, UserRoleType[]> = {
   "/app/dashboard": ["admin", "manager", "requestor"],
   "/app/sales": ["admin", "manager"],
+  "/app/sales-history": ["admin", "manager"],
   "/app/catalog": ["admin", "manager", "requestor"],
   "/app/requests": ["admin", "manager", "requestor"],
   "/app/movements": ["admin", "manager"],

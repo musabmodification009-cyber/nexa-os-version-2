@@ -1,3 +1,21 @@
+// ─── Sales ───────────────────────────────────────────────
+
+export interface SaleLineItem {
+  itemId: string;
+  itemName: string;
+  sku: string;
+  quantity: number;
+  unitPriceNgn: number;
+  imageUrl?: string;
+}
+
+export interface SaleTransaction {
+  id: string;
+  items: SaleLineItem[];
+  totalNgn: number;
+  createdAt: string;
+}
+
 // ─── Enums ───────────────────────────────────────────────
 
 export enum MovementType {
