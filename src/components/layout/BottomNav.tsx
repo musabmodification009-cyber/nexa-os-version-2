@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ArrowLeftRight, ClipboardList, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, ArrowLeftRight, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -7,9 +7,9 @@ import { Sidebar } from "./Sidebar";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
+  { label: "Sales", href: "/app/sales", icon: ShoppingCart },
   { label: "Catalog", href: "/app/catalog", icon: Package },
   { label: "Movements", href: "/app/movements", icon: ArrowLeftRight },
-  { label: "Orders", href: "/app/purchase-orders", icon: ClipboardList },
 ] as const;
 
 export function BottomNav() {

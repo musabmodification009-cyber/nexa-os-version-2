@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useDemo } from "@/hooks/useDemo";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { useState, useEffect } from "react";
+import { BusinessOnboarding } from "@/components/onboarding/BusinessOnboarding";
 import {
   Package,
   BarChart3,
@@ -328,13 +329,33 @@ function FeatureTabsSection() {
 function LandingPage() {
   const { enterDemoMode } = useDemo();
   const navigate = useNavigate();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const handleTryDemo = () => {
+    setShowOnboarding(true);
+  };
+
+  const handleOnboardingComplete = (_businessType: string, _categories: string[]) => {
     enterDemoMode();
+    localStorage.setItem("stackwise-onboarding-done", "true");
+    localStorage.setItem("stackwise-business-type", _businessType);
+    localStorage.setItem("stackwise-categories", JSON.stringify(_categories));
+    setShowOnboarding(false);
+    navigate({ to: "/app/dashboard" });
+  };
+
+  const handleOnboardingSkip = () => {
+    enterDemoMode();
+    localStorage.setItem("stackwise-onboarding-done", "true");
+    setShowOnboarding(false);
     navigate({ to: "/app/dashboard" });
   };
 
   return (
+    <>
+    {showOnboarding && (
+      <BusinessOnboarding onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} />
+    )}
     <div className="min-h-screen bg-background text-foreground">
       <StickyNav onTryDemo={handleTryDemo} />
 
@@ -497,5 +518,6 @@ function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
