@@ -7,6 +7,7 @@ import type {
   PurchaseOrder,
   InventoryRequest,
   Notification,
+  SaleTransaction,
 } from "@/types/inventory";
 import { MovementType } from "@/types/inventory";
 import { generateSeedData, type SeedData } from "./demo/index";
