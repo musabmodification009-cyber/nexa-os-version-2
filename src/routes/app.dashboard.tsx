@@ -53,12 +53,37 @@ function DashboardPage() {
     toast.success("Tour complete! Explore freely or start the walkthrough.");
   };
 
+  const { onboarding } = useDemo();
+
+  const businessLabel = onboarding.businessType
+    ? onboarding.businessType.charAt(0).toUpperCase() + onboarding.businessType.slice(1)
+    : null;
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Welcome back — here's your inventory overview.</p>
+        <p className="text-sm text-muted-foreground">
+          {businessLabel
+            ? `${businessLabel} inventory overview`
+            : "Welcome back — here's your inventory overview."}
+        </p>
       </div>
+
+      {/* Onboarding categories */}
+      {onboarding.categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Your categories:</span>
+          {onboarding.categories.map((cat) => (
+            <span
+              key={cat}
+              className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize"
+            >
+              {cat.replace(/-/g, " ")}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div data-tour="metrics" className="rounded-xl border border-border bg-card p-3 shadow-xs">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
