@@ -1,0 +1,14 @@
+{
+  "prdId": "PRD-05",
+  "feature": "Role-Based Access Control",
+  "buildOrder": 5,
+  "dependsOnPrds": ["PRD-04"],
+  "stories": [
+    { "id": "US-05-001", "title": "Create RoleContext and useRole hook", "isPassed": true, "notes": "RoleContext + useRole. Demo=admin, stub=requestor. Permissions derived from role." },
+    { "id": "US-05-002", "title": "Conditional sidebar navigation by role", "isPassed": true, "notes": "NavGroups/items filtered by permKey. Hidden items removed from DOM." },
+    { "id": "US-05-003", "title": "Route-level access guards", "isPassed": true, "notes": "canAccessRoute in route-guard.ts. useEffect in app.tsx redirects + toast." },
+    { "id": "US-05-004", "title": "usePermissions hook for component-level checks", "isPassed": true, "notes": "usePermissions with can() + PermissionGate component." },
+    { "id": "US-05-005", "title": "Role indicator in header", "isPassed": true, "notes": "Badge in header with role-specific colors." },
+    { "id": "US-05-006", "title": "Role switching in demo mode", "isPassed": true, "notes": "Segmented control in DemoBanner. Switches role immediately, updates sidebar + permissions." }
+  ]
+}

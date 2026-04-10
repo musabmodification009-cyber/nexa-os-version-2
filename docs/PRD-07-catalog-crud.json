@@ -1,0 +1,15 @@
+{
+  "prdId": "PRD-07",
+  "feature": "Product Catalog — CRUD & Browse",
+  "buildOrder": 7,
+  "stories": [
+    { "id": "US-07-001", "title": "Catalog data table component", "isPassed": true, "notes": "CatalogTable with checkbox, sortable headers, pagination 20/page, StatusBadge inline." },
+    { "id": "US-07-002", "title": "Catalog filter bar", "isPassed": true, "notes": "Category/Supplier/Status/Location dropdowns + text search. Mobile sheet collapse." },
+    { "id": "US-07-003", "title": "Catalog column sorting", "isPassed": true, "notes": "Click cycles asc→desc→unsorted. Arrow icons. Resets pagination." },
+    { "id": "US-07-004", "title": "Create item form — side sheet", "isPassed": true, "notes": "ItemFormSheet with zod validation, organized sections, SKU uniqueness check." },
+    { "id": "US-07-005", "title": "Edit item via form sheet", "isPassed": true, "notes": "Pre-populated edit mode, PermissionGate on edit buttons." },
+    { "id": "US-07-006", "title": "Delete item with confirmation", "isPassed": true, "notes": "AlertDialog confirmation. Admin=delete, Manager=archive." },
+    { "id": "US-07-007", "title": "New Item button and page header", "isPassed": true, "notes": "Header with count, New Item button (desktop), FAB (mobile), PermissionGate." },
+    { "id": "US-07-008", "title": "Catalog page composition", "isPassed": true, "notes": "Full page with filter→sort→paginate pipeline, create/edit/delete flows." }
+  ]
+}

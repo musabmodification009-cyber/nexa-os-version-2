@@ -1,0 +1,232 @@
+{
+  "prdId": "PRD-11",
+  "feature": "Purchase Orders — CRUD & Workflow",
+  "description": "Purchase orders (POs) allow managers to order stock from suppliers. A PO contains a supplier reference, line items (each referencing a catalog item with quantity and unit cost), expected delivery date, and notes. POs follow a status workflow: draft → submitted → partially received → fully received, or cancelled at any point before fully received. The PO list page at /app/purchase-orders shows all POs with filtering by status and supplier. A create/edit form lets users build POs with line items, and an auto-suggest feature recommends low-stock items when creating a PO. Only Admin and Manager roles can create, edit, and manage POs. All authenticated users can view POs.",
+  "buildOrder": 11,
+  "dependsOnPrds": ["PRD-09", "PRD-10"],
+  "stories": [
+    {
+      "id": "US-11-001",
+      "title": "Purchase orders list table",
+      "description": "Create src/components/purchase-orders/PurchaseOrdersTable.tsx — a data table at /app/purchase-orders. Columns: PO Number (auto-generated PO-XXXX format), Supplier Name, Status (badge: draft=gray, submitted=blue, partially_received=amber, fully_received=green, cancelled=red), Line Items Count, Total Cost (formatted currency), Expected Delivery (date), Created Date. Data from usePurchaseOrders(). Pagination at 20 per page. Sorted newest first by default. Row click opens detail view.",
+      "acceptanceCriteria": [
+        "Table renders all columns with PO data",
+        "Status badges with correct colors per status",
+        "Total cost calculated from sum of line items (qty × unit_cost)",
+        "Pagination at 20 per page",
+        "Sorted newest first",
+        "Row click triggers detail view",
+        "Empty state: 'No purchase orders yet'",
+        "Responsive: horizontal scroll on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/purchase-orders. Table shows POs from seed data. Status badges colored correctly. Total cost column shows calculated values. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "Table with 6 seed POs, status badges, pagination, formatted costs, row click handler."
+    },
+    {
+      "id": "US-11-002",
+      "title": "Purchase orders filters",
+      "description": "Create src/components/purchase-orders/PurchaseOrdersFilters.tsx — filter bar above the PO table. Filters: Status (multi-select: draft, submitted, partially_received, fully_received, cancelled), Supplier (select from supplier list), Date Range (from/to date pickers for created date). All filters are client-side against the loaded PO data. Active filter count badge. 'Clear Filters' button resets all.",
+      "acceptanceCriteria": [
+        "Status multi-select filter works",
+        "Supplier dropdown populated from suppliers data",
+        "Date range filters by created date",
+        "Active filter count badge shown",
+        "Clear Filters resets all filters",
+        "Filters compose (AND logic)",
+        "Responsive: filters stack vertically on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/purchase-orders. Filter by status 'draft' — only draft POs shown. Filter by supplier — narrows results. Apply date range — filters by date. Clear filters — all POs return. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-11-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "Status multi-select, supplier dropdown, date range filters with AND logic. Clear button. Mobile sheet."
+    },
+    {
+      "id": "US-11-003",
+      "title": "PO create/edit form — header fields",
+      "description": "Create src/components/purchase-orders/PurchaseOrderFormSheet.tsx — a Sheet (600px) for creating/editing POs. Header section fields: Supplier (required, select from supplier list), Expected Delivery Date (date picker, required), Notes (textarea, optional), Status display (read-only for existing POs). PO Number auto-generated on create. Zod validation. Form supports both create and edit modes. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Sheet with supplier select, date picker, notes",
+        "Supplier required validation",
+        "Expected delivery date required",
+        "PO number auto-generated (PO-XXXX format)",
+        "Create mode: empty form, 'New Purchase Order' title",
+        "Edit mode: pre-populated, 'Edit PO-XXXX' title",
+        "Status shown as read-only badge in edit mode",
+        "Admin/Manager only access"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/purchase-orders. Click 'New PO'. Sheet opens. Try saving without supplier — validation error. Select supplier and date, save — PO created with auto number. Open existing PO — edit mode with pre-filled fields. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-02-007", "US-05-004", "US-10-001"],
+      "isPassed": true,
+      "notes": "Sheet with supplier select, date picker, notes. Zod validation. Create mode generates PO-YYYY-XXXX number. Edit mode shows status badge."
+    },
+    {
+      "id": "US-11-004",
+      "title": "PO line items editor",
+      "description": "Add line items section to PurchaseOrderFormSheet. Create src/components/purchase-orders/LineItemsEditor.tsx — a dynamic list of line items. Each line: Item (select from catalog items, searchable), Quantity (number, required, min 1), Unit Cost (number, required, min 0), Line Total (qty × cost, read-only). Add Item button appends a new empty row. Remove button (X) on each row. Running total at bottom. At least one line item required to save the PO.",
+      "acceptanceCriteria": [
+        "Dynamic line item rows with item select, qty, cost",
+        "Item select is searchable across catalog items",
+        "Line total auto-calculated",
+        "Running total shown at bottom",
+        "Add Item appends new row",
+        "Remove (X) deletes row",
+        "At least one line item required validation",
+        "Quantity min 1, cost min 0 validation"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, create new PO. Add line item — select item, enter qty 10, cost 5.00 — line total shows 50.00. Add second item. Running total updates. Remove first item. Try saving with zero items — validation error. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-11-003", "US-02-004"],
+      "isPassed": true,
+      "notes": "LineItemsEditor component with add/remove rows, auto-calculated line totals, running total, validation for at least 1 item. Integrated into PO form sheet."
+    },
+    {
+      "id": "US-11-005",
+      "title": "Low-stock item suggestions",
+      "description": "Create src/components/purchase-orders/LowStockSuggestions.tsx — shown in the PO form when creating a new PO and a supplier is selected. Displays a compact list of items from that supplier where quantity_on_hand <= reorder_point. Each suggestion shows item name, SKU, current qty, reorder point, and a '+ Add' button that adds the item as a line item with suggested quantity (reorder_point - quantity_on_hand + safety buffer of 20%). If no low-stock items, section hidden.",
+      "acceptanceCriteria": [
+        "Shows low-stock items for selected supplier",
+        "Each suggestion: name, SKU, current qty, reorder point",
+        "'+ Add' button adds item to line items with suggested qty",
+        "Suggested qty = (reorder_point - qty_on_hand) × 1.2 rounded up",
+        "Hidden when no low-stock items for supplier",
+        "Hidden in edit mode",
+        "Updates when supplier selection changes"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, create new PO. Select a supplier with low-stock items — suggestions appear. Click '+ Add' — item added to line items with calculated qty. Change supplier — suggestions update. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-11-004", "US-02-004"],
+      "isPassed": true,
+      "notes": "LowStockSuggestions shows items where currentStock<=reorderPoint for selected supplier. +Add creates line item with suggested qty (deficit×1.2). Hidden in edit mode."
+    },
+    {
+      "id": "US-11-006",
+      "title": "PO status workflow actions",
+      "description": "Create src/components/purchase-orders/POStatusActions.tsx — action buttons that change PO status. Draft → 'Submit' button (changes to submitted). Submitted → 'Cancel' button. Any non-final status → 'Cancel' (with AlertDialog confirmation). Cancelled and fully_received are terminal states with no actions. Status transitions: draft→submitted, submitted→partially_received (handled by receiving in PRD-12), submitted→cancelled, partially_received→fully_received (handled by receiving), partially_received→cancelled, draft→cancelled. Each transition updates the PO and shows toast. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Draft PO shows Submit and Cancel buttons",
+        "Submitted PO shows Cancel button",
+        "Cancel requires AlertDialog confirmation",
+        "Cancelled PO shows no action buttons",
+        "Fully received PO shows no action buttons",
+        "Status change updates PO and shows toast",
+        "Admin/Manager only",
+        "Partially received shows Cancel button"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open draft PO — Submit and Cancel visible. Click Submit — status changes to submitted, toast shown. Open submitted PO — Cancel visible. Click Cancel — confirmation dialog — confirm — status cancelled. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-11-001", "US-02-007", "US-05-004"],
+      "isPassed": true,
+      "notes": "POStatusActions: Submit (draft→submitted), Cancel with AlertDialog. Terminal states show nothing. Admin/Manager only."
+    },
+    {
+      "id": "US-11-007",
+      "title": "PO detail sheet",
+      "description": "Create src/components/purchase-orders/PurchaseOrderDetailSheet.tsx — a Sheet (600px) showing full PO details. Header: PO number, status badge, supplier name (link to supplier detail), dates (created, expected delivery). Line items table: item name, SKU, qty ordered, unit cost, line total. Footer: total cost. Status action buttons from POStatusActions. Edit button for draft POs only (admin/manager). Close button.",
+      "acceptanceCriteria": [
+        "Sheet shows PO number, status, supplier, dates",
+        "Supplier name links to supplier detail",
+        "Line items table with all columns",
+        "Total cost in footer",
+        "Status action buttons rendered",
+        "Edit button only for draft POs (admin/manager)",
+        "Close button and click-outside closes",
+        "Responsive layout on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/purchase-orders. Click a PO row — detail sheet opens with all info. Line items listed. Status actions visible. For draft PO — edit button shown. For submitted PO — no edit. Supplier name clickable. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-11-001", "US-11-006"],
+      "isPassed": true,
+      "notes": "Detail sheet with PO info, supplier link, line items table, total, status actions, edit button for draft only."
+    },
+    {
+      "id": "US-11-008",
+      "title": "PO delete for draft only",
+      "description": "Add delete action for POs in draft status only (admin only). Delete button in PO detail sheet and in row actions dropdown. AlertDialog confirmation: 'Delete this draft purchase order? This cannot be undone.' Deleting removes the PO and all its line items. Non-draft POs cannot be deleted — only cancelled.",
+      "acceptanceCriteria": [
+        "Delete option only for draft POs",
+        "Admin only",
+        "AlertDialog confirmation with warning",
+        "Deletes PO and line items",
+        "Non-draft POs have no delete option",
+        "Toast confirmation after delete",
+        "Table refreshes after deletion"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode (admin). Open draft PO — delete option visible. Confirm delete — PO removed from table. Open submitted PO — no delete option. No console errors."
+      },
+      "priority": 8,
+      "dependencies": ["US-11-007", "US-05-004"],
+      "isPassed": true,
+      "notes": "Delete button in detail sheet for draft POs, admin only. AlertDialog confirmation. Deletes PO and closes sheet with toast."
+    },
+    {
+      "id": "US-11-009",
+      "title": "Purchase orders page composition",
+      "description": "Compose the full /app/purchase-orders page in src/routes/app.purchase-orders.tsx. Header: 'Purchase Orders' heading, PO count, '+ New PO' button (admin/manager). Filters bar. Table. Detail sheet wired to row clicks. Form sheet for create/edit. URL param ?po=ID for direct linking. Page title 'Purchase Orders — Stackwise'.",
+      "acceptanceCriteria": [
+        "Page heading with count and New PO button",
+        "Filters, table, detail sheet, form all composed",
+        "Row click opens detail, URL updates",
+        "?po=ID opens detail on load",
+        "New PO button opens form sheet",
+        "Page title set correctly",
+        "Requestor: no new/edit/delete buttons, can view only"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/purchase-orders. Page renders fully. Click 'New PO' — form opens. Click row — detail opens, URL updates. Navigate to ?po=ID directly — detail opens. Switch to requestor — action buttons hidden, can still view. No console errors."
+      },
+      "priority": 9,
+      "dependencies": ["US-11-001", "US-11-002", "US-11-003", "US-11-004", "US-11-005", "US-11-006", "US-11-007", "US-11-008"],
+      "isPassed": true,
+      "notes": "Page composed with filters, table, detail sheet, form sheet. validateSearch for ?po=ID. Requestor can view but no create/edit/delete. Route guard updated to allow requestor access."
+    },
+    {
+      "id": "US-11-010",
+      "title": "PO summary stats",
+      "description": "Create src/components/purchase-orders/POSummaryStats.tsx — metric pills above the filters bar. Stats: Total POs (count), Draft (count), Awaiting Delivery (submitted count), Completed (fully_received count). Each pill shows label and count. Counts update based on current filters. Styled as compact inline badges similar to movement summary stats.",
+      "acceptanceCriteria": [
+        "4 metric pills: Total, Draft, Awaiting, Completed",
+        "Counts reflect current filtered data",
+        "Styled as compact inline badges",
+        "Responsive: wrap on mobile",
+        "Updates when filters change"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open /app/purchase-orders in demo mode. Summary stats show correct counts matching the table data. Apply a filter — counts update. No console errors."
+      },
+      "priority": 10,
+      "dependencies": ["US-11-001", "US-11-002"],
+      "isPassed": true,
+      "notes": "4 metric pills (Total, Draft, Awaiting Delivery, Completed) above filters. Counts reflect filtered data."
+    }
+  ]
+}

@@ -1,0 +1,841 @@
+{
+  "app_name": "Stackwise — Inventory Command Center",
+  "generated_at": "2026-03-18T00:00:00.000Z",
+  "total_tests": 35,
+  "stats": {
+    "passed": 33,
+    "failed": 0,
+    "blocked": 2,
+    "pending": 0,
+    "bugs_fixed": 0
+  },
+  "tests": [
+    {
+      "id": "TEST-001",
+      "category": "e2e",
+      "feature": "Landing Page",
+      "title": "Landing page renders with hero and nav",
+      "description": "Verify the landing page loads with the Stackwise branding, hero heading, and Try Demo button",
+      "preconditions": [
+        "Navigate to /"
+      ],
+      "steps": [
+        "Step 1: Navigate to /",
+        "Step 2: Wait for page to load"
+      ],
+      "expected_result": "Landing page displays with hero heading containing 'Built to Scale' and a 'Try Demo' button",
+      "pass_criteria": "Text 'Built to Scale' is visible AND a button containing 'Try Demo' is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-002",
+      "category": "e2e",
+      "feature": "Demo Mode Entry",
+      "title": "Try Demo button enters demo mode and navigates to dashboard",
+      "description": "Clicking Try Demo should activate demo mode and redirect to /app/dashboard",
+      "preconditions": [
+        "Navigate to /"
+      ],
+      "steps": [
+        "Step 1: Navigate to /",
+        "Step 2: Click the 'Try Demo' button in the hero section",
+        "Step 3: Wait for navigation to complete"
+      ],
+      "expected_result": "User is redirected to /app/dashboard with demo banner visible",
+      "pass_criteria": "URL contains '/app/dashboard' AND text 'Dashboard' is visible as an h1",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-003",
+      "category": "e2e",
+      "feature": "Demo Banner",
+      "title": "Demo banner shows with role switcher",
+      "description": "In demo mode, the banner should display with Admin/Manager/Requestor role buttons",
+      "preconditions": [
+        "Enter demo mode via Try Demo"
+      ],
+      "steps": [
+        "Step 1: Enter demo mode",
+        "Step 2: Check for demo banner text",
+        "Step 3: Verify role switcher buttons exist"
+      ],
+      "expected_result": "Banner with 'Demo Mode' or 'demo mode' text visible, with three role buttons",
+      "pass_criteria": "Buttons labeled 'Admin', 'Manager', and 'Requestor' are all visible in the banner area",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-004",
+      "category": "functional",
+      "feature": "Role Switching",
+      "title": "Switching to Requestor role hides admin-only nav items",
+      "description": "When role is changed to Requestor, Settings and Analytics should not be accessible",
+      "preconditions": [
+        "Enter demo mode, on dashboard"
+      ],
+      "steps": [
+        "Step 1: Enter demo mode",
+        "Step 2: Click 'Requestor' in the demo banner role switcher",
+        "Step 3: Check sidebar for Settings link"
+      ],
+      "expected_result": "Settings link should not be visible in the sidebar",
+      "pass_criteria": "No link with text 'Settings' is visible in the sidebar navigation",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-005",
+      "category": "e2e",
+      "feature": "Dashboard",
+      "title": "Dashboard shows metric cards with seed data",
+      "description": "Dashboard should display 4 metric cards: Total SKUs, In Stock, Low Stock, Out of Stock",
+      "preconditions": [
+        "Enter demo mode"
+      ],
+      "steps": [
+        "Step 1: Enter demo mode and navigate to dashboard",
+        "Step 2: Dismiss onboarding tour if present",
+        "Step 3: Check for metric cards"
+      ],
+      "expected_result": "Four metric cards visible with labels Total SKUs, In Stock, Low Stock, Out of Stock",
+      "pass_criteria": "Text 'Total SKUs' AND 'In Stock' AND 'Low Stock' AND 'Out of Stock' are all visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-006",
+      "category": "e2e",
+      "feature": "Dashboard",
+      "title": "Onboarding tour auto-starts on first demo visit",
+      "description": "The onboarding tour overlay should appear automatically when entering demo for the first time",
+      "preconditions": [
+        "Fresh demo mode entry"
+      ],
+      "steps": [
+        "Step 1: Click Try Demo from landing page",
+        "Step 2: Wait for dashboard to load",
+        "Step 3: Check for tour overlay"
+      ],
+      "expected_result": "Tour overlay with 'Welcome to Stackwise!' text appears",
+      "pass_criteria": "Text 'Welcome to Stackwise!' is visible within 2 seconds of dashboard load",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-007",
+      "category": "e2e",
+      "feature": "Navigation",
+      "title": "Sidebar navigation to Catalog page",
+      "description": "Clicking Catalog in sidebar navigates to /app/catalog",
+      "preconditions": [
+        "In demo mode on dashboard"
+      ],
+      "steps": [
+        "Step 1: Enter demo mode",
+        "Step 2: Click 'Catalog' link in the sidebar",
+        "Step 3: Wait for page load"
+      ],
+      "expected_result": "Catalog page loads with 'Product Catalog' heading",
+      "pass_criteria": "URL contains '/app/catalog' AND h1 'Product Catalog' is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-008",
+      "category": "e2e",
+      "feature": "Catalog",
+      "title": "Catalog table renders with seed items",
+      "description": "The catalog page should show a table with seeded inventory items",
+      "preconditions": [
+        "In demo mode, navigate to /app/catalog"
+      ],
+      "steps": [
+        "Step 1: Navigate to catalog page",
+        "Step 2: Check for table rows"
+      ],
+      "expected_result": "Table with at least 1 item row is visible",
+      "pass_criteria": "A table element is visible AND contains at least 1 tbody row",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-009",
+      "category": "functional",
+      "feature": "Catalog",
+      "title": "Search filters catalog items",
+      "description": "Typing in the search box should filter the displayed catalog items",
+      "preconditions": [
+        "In demo mode on catalog page"
+      ],
+      "steps": [
+        "Step 1: Navigate to catalog page",
+        "Step 2: Type a known item name into the search input",
+        "Step 3: Verify table rows are filtered"
+      ],
+      "expected_result": "Only items matching the search term are displayed",
+      "pass_criteria": "After typing a search term, the number of visible table rows decreases from the initial count",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-010",
+      "category": "functional",
+      "feature": "Catalog",
+      "title": "Create new item via form sheet",
+      "description": "Admin should be able to create a new item using the New Item form",
+      "preconditions": [
+        "In demo mode as Admin on catalog page"
+      ],
+      "steps": [
+        "Step 1: Click 'New Item' button",
+        "Step 2: Fill in Name and SKU fields",
+        "Step 3: Click save/create button",
+        "Step 4: Verify success toast and item appears in table"
+      ],
+      "expected_result": "Item is created, toast shows 'Item created', and item appears in the catalog",
+      "pass_criteria": "Toast with text 'Item created' is visible after form submission",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-011",
+      "category": "functional",
+      "feature": "Catalog",
+      "title": "Item detail sheet opens on row click",
+      "description": "Clicking a catalog row should open the detail sheet for that item",
+      "preconditions": [
+        "In demo mode on catalog page with items"
+      ],
+      "steps": [
+        "Step 1: Click on a table row",
+        "Step 2: Wait for detail sheet to appear"
+      ],
+      "expected_result": "A detail sheet/panel appears showing the item name and details",
+      "pass_criteria": "A sheet/dialog element is visible containing item details with tabs (Overview, History)",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-012",
+      "category": "functional",
+      "feature": "Catalog",
+      "title": "Bulk select items via header checkbox",
+      "description": "Clicking the header checkbox should select all visible items and show the bulk action bar",
+      "preconditions": [
+        "In demo mode as Admin on catalog page"
+      ],
+      "steps": [
+        "Step 1: Click the header checkbox in the catalog table",
+        "Step 2: Check for bulk action bar"
+      ],
+      "expected_result": "All rows are selected and a bulk action bar appears showing count",
+      "pass_criteria": "Text matching 'selected' is visible in the bulk action bar",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-013",
+      "category": "functional",
+      "feature": "Catalog",
+      "title": "Requestor cannot see New Item button",
+      "description": "When role is Requestor, the New Item button should be hidden",
+      "preconditions": [
+        "In demo mode, switch role to Requestor, on catalog page"
+      ],
+      "steps": [
+        "Step 1: Switch role to Requestor via banner",
+        "Step 2: Navigate to catalog page",
+        "Step 3: Check for New Item button"
+      ],
+      "expected_result": "New Item button is not visible",
+      "pass_criteria": "No button with text 'New Item' is visible on the page",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-014",
+      "category": "e2e",
+      "feature": "Movements",
+      "title": "Movements page renders with seed data",
+      "description": "The movements page should display a table of stock movements",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/movements via sidebar",
+        "Step 2: Check for heading and movement data"
+      ],
+      "expected_result": "Page shows 'Stock Movements' heading and a table with movement rows",
+      "pass_criteria": "h1 'Stock Movements' is visible AND table has at least 1 row",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-015",
+      "category": "functional",
+      "feature": "Movements",
+      "title": "Log Movement form opens and submits",
+      "description": "Admin should be able to log a new stock movement",
+      "preconditions": [
+        "In demo mode as Admin on movements page"
+      ],
+      "steps": [
+        "Step 1: Click 'Log Movement' button",
+        "Step 2: Select an item and movement type",
+        "Step 3: Enter quantity",
+        "Step 4: Submit the form"
+      ],
+      "expected_result": "Movement is logged and success toast appears",
+      "pass_criteria": "A toast with success message is visible after form submission",
+      "status": "blocked",
+      "passed": false,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "Sidebar navigation groups are collapsed and expanding them is unreliable in Playwright. Command palette navigation also times out. Cannot reliably reach movements page to test the form.",
+      "fix_description": "",
+      "blocked_reason": "Sidebar collapsible groups prevent reliable navigation to movements page. Previous test (TEST-014) passed but current session cannot reproduce sidebar link visibility. Likely a state/cookie issue between test runs."
+    },
+    {
+      "id": "TEST-016",
+      "category": "e2e",
+      "feature": "Suppliers",
+      "title": "Suppliers page renders with seed suppliers",
+      "description": "The suppliers page should list seeded suppliers",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/suppliers via sidebar",
+        "Step 2: Check for heading and supplier data"
+      ],
+      "expected_result": "Page shows 'Supplier Directory' heading with supplier rows",
+      "pass_criteria": "h1 'Supplier Directory' is visible AND at least 1 supplier row is shown",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-017",
+      "category": "functional",
+      "feature": "Suppliers",
+      "title": "Supplier detail sheet opens on row click",
+      "description": "Clicking a supplier row opens the detail sheet",
+      "preconditions": [
+        "In demo mode on suppliers page"
+      ],
+      "steps": [
+        "Step 1: Click on a supplier row",
+        "Step 2: Check for detail sheet"
+      ],
+      "expected_result": "Supplier detail sheet appears with supplier info",
+      "pass_criteria": "A sheet element is visible containing supplier details",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-018",
+      "category": "e2e",
+      "feature": "Purchase Orders",
+      "title": "Purchase Orders page renders",
+      "description": "The PO page should display with heading and any existing orders",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/purchase-orders",
+        "Step 2: Check for heading"
+      ],
+      "expected_result": "Page shows 'Purchase Orders' heading",
+      "pass_criteria": "h1 'Purchase Orders' is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-019",
+      "category": "functional",
+      "feature": "Purchase Orders",
+      "title": "Create new purchase order",
+      "description": "Admin should be able to create a new PO with line items",
+      "preconditions": [
+        "In demo mode as Admin on PO page"
+      ],
+      "steps": [
+        "Step 1: Click 'New PO' button",
+        "Step 2: Select a supplier",
+        "Step 3: Add at least one line item",
+        "Step 4: Submit the form"
+      ],
+      "expected_result": "PO is created and appears in the list",
+      "pass_criteria": "A toast with success message appears after PO creation",
+      "status": "blocked",
+      "passed": false,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "Radix Select dropdown for line item selection renders outside viewport. Element is outside of the viewport error when clicking options with force:true.",
+      "fix_description": "",
+      "blocked_reason": "PO line item Radix Select dropdown renders options outside the viewport in Playwright. Cannot select a line item to complete PO creation form."
+    },
+    {
+      "id": "TEST-020",
+      "category": "e2e",
+      "feature": "Requests",
+      "title": "Requests page renders with tabs for admin",
+      "description": "As admin, requests page should show All Requests and Pending Approval tabs",
+      "preconditions": [
+        "In demo mode as Admin"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/requests",
+        "Step 2: Check for tabs"
+      ],
+      "expected_result": "Page shows 'Inventory Requests' heading with 'All Requests' and 'Pending Approval' tabs",
+      "pass_criteria": "Text 'All Requests' AND 'Pending Approval' are visible as tab triggers",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-021",
+      "category": "functional",
+      "feature": "Requests",
+      "title": "Create new inventory request",
+      "description": "Any user should be able to create a new inventory request",
+      "preconditions": [
+        "In demo mode on requests page"
+      ],
+      "steps": [
+        "Step 1: Click 'New Request' button",
+        "Step 2: Fill in required fields",
+        "Step 3: Submit the form"
+      ],
+      "expected_result": "Request is created with success feedback",
+      "pass_criteria": "A toast with success message is visible after request creation",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-022",
+      "category": "e2e",
+      "feature": "Locations",
+      "title": "Locations page renders with tree view",
+      "description": "The locations page should show location tree and details panel",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/locations",
+        "Step 2: Check for heading and tree"
+      ],
+      "expected_result": "Page shows 'Locations' heading with location tree",
+      "pass_criteria": "h1 'Locations' is visible AND at least one location name is shown",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-023",
+      "category": "e2e",
+      "feature": "Analytics",
+      "title": "Analytics page renders stock overview",
+      "description": "As admin, analytics page should show Stock Overview tab with charts",
+      "preconditions": [
+        "In demo mode as Admin"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/analytics",
+        "Step 2: Check for heading and stock overview tab"
+      ],
+      "expected_result": "Page shows 'Analytics' heading with Stock Overview content",
+      "pass_criteria": "h1 'Analytics' is visible AND text 'Stock Overview' is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-024",
+      "category": "e2e",
+      "feature": "AI Insights",
+      "title": "AI Insights page renders with reorder suggestions",
+      "description": "AI Insights page should show forecast summary and suggestion cards",
+      "preconditions": [
+        "In demo mode as Admin"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/ai-insights",
+        "Step 2: Check for heading and content"
+      ],
+      "expected_result": "Page shows 'AI Insights' heading with Beta badge",
+      "pass_criteria": "Text 'AI Insights' is visible AND text 'Beta' is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-025",
+      "category": "e2e",
+      "feature": "Settings",
+      "title": "Settings page renders with tabs for admin",
+      "description": "Admin should see settings page with Categories, Custom Fields, Users etc. tabs",
+      "preconditions": [
+        "In demo mode as Admin"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/settings",
+        "Step 2: Check for heading and tabs"
+      ],
+      "expected_result": "Page shows 'Settings' heading with tab options",
+      "pass_criteria": "h1 'Settings' is visible AND text 'Categories' is visible as a tab trigger",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-026",
+      "category": "functional",
+      "feature": "Settings",
+      "title": "Requestor is denied access to settings",
+      "description": "Switching to Requestor and navigating to settings should redirect to dashboard",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Switch role to Requestor",
+        "Step 2: Attempt to navigate to /app/settings",
+        "Step 3: Check redirect"
+      ],
+      "expected_result": "User is redirected to dashboard with access denied toast",
+      "pass_criteria": "URL contains '/app/dashboard' after attempting to access settings as Requestor",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-027",
+      "category": "e2e",
+      "feature": "Help",
+      "title": "Help page renders with FAQ accordion",
+      "description": "The help page should show searchable FAQ",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Navigate to /app/help",
+        "Step 2: Check for heading and FAQ content"
+      ],
+      "expected_result": "Page shows 'Help Center' heading with FAQ categories",
+      "pass_criteria": "h1 'Help Center' is visible AND at least one accordion trigger is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-028",
+      "category": "functional",
+      "feature": "Help",
+      "title": "Help search filters FAQ items",
+      "description": "Typing in the help search should filter FAQ questions",
+      "preconditions": [
+        "In demo mode on help page"
+      ],
+      "steps": [
+        "Step 1: Type a search term in the help search input",
+        "Step 2: Verify results are filtered"
+      ],
+      "expected_result": "FAQ items are filtered to show only matching results",
+      "pass_criteria": "After typing a non-matching term like 'xyznonexistent', text 'No matching questions' is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-029",
+      "category": "functional",
+      "feature": "Command Palette",
+      "title": "CMD+K opens command palette",
+      "description": "Pressing Ctrl+K or CMD+K should open the command palette dialog",
+      "preconditions": [
+        "In demo mode on any page"
+      ],
+      "steps": [
+        "Step 1: Press Ctrl+K (or Meta+K)",
+        "Step 2: Check for command palette dialog"
+      ],
+      "expected_result": "Command palette dialog appears with search input",
+      "pass_criteria": "A dialog with a search/command input is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-030",
+      "category": "functional",
+      "feature": "Demo Banner",
+      "title": "Demo banner dismiss button hides banner",
+      "description": "Clicking X on demo banner should hide it for the session",
+      "preconditions": [
+        "In demo mode with banner visible"
+      ],
+      "steps": [
+        "Step 1: Click the dismiss (X) button on the demo banner",
+        "Step 2: Check banner visibility"
+      ],
+      "expected_result": "Demo banner is no longer visible",
+      "pass_criteria": "The demo banner element is no longer visible after clicking dismiss",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-031",
+      "category": "e2e",
+      "feature": "Demo Guard",
+      "title": "Direct /app navigation without demo redirects to landing",
+      "description": "Navigating to /app/* without being in demo mode should redirect to /",
+      "preconditions": [
+        "Not in demo mode"
+      ],
+      "steps": [
+        "Step 1: Navigate directly to /app/dashboard without entering demo",
+        "Step 2: Check URL"
+      ],
+      "expected_result": "User is redirected to / (landing page)",
+      "pass_criteria": "URL is '/' or landing page content is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-032",
+      "category": "functional",
+      "feature": "Role Switching",
+      "title": "Switching to Manager role shows appropriate permissions",
+      "description": "Manager should see most features except Settings",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Click 'Manager' in demo banner",
+        "Step 2: Navigate to catalog page",
+        "Step 3: Check that New Item button is visible (managers can manage items)",
+        "Step 4: Check sidebar — Settings should be hidden"
+      ],
+      "expected_result": "Manager can see catalog actions but not Settings",
+      "pass_criteria": "Button 'New Item' is visible on catalog page AND 'Settings' link is not visible in sidebar",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-033",
+      "category": "functional",
+      "feature": "Landing Page",
+      "title": "Feature tabs switch content on landing page",
+      "description": "Clicking Dashboard/Catalog/Analytics tabs in the Product Tour section should change the displayed image",
+      "preconditions": [
+        "On landing page"
+      ],
+      "steps": [
+        "Step 1: Scroll to the Product Tour section",
+        "Step 2: Click on 'Catalog' tab",
+        "Step 3: Verify the image alt text changes"
+      ],
+      "expected_result": "Image switches to show 'Stackwise Catalog view'",
+      "pass_criteria": "An image with alt text containing 'Catalog' is visible after clicking the Catalog tab",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-034",
+      "category": "functional",
+      "feature": "Catalog",
+      "title": "Column sorting cycles through asc/desc/unsorted",
+      "description": "Clicking a sortable column header should cycle sort direction",
+      "preconditions": [
+        "In demo mode on catalog page with items"
+      ],
+      "steps": [
+        "Step 1: Click the 'Name' column header",
+        "Step 2: Observe sort direction indicator",
+        "Step 3: Click again to reverse",
+        "Step 4: Click again to unsort"
+      ],
+      "expected_result": "Sort direction toggles through asc → desc → unsorted",
+      "pass_criteria": "After first click, items are sorted alphabetically; after second click, they are reverse sorted",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    },
+    {
+      "id": "TEST-035",
+      "category": "functional",
+      "feature": "Exit Demo",
+      "title": "Exit demo returns to landing page",
+      "description": "Using the exit demo option should return user to the landing page",
+      "preconditions": [
+        "In demo mode"
+      ],
+      "steps": [
+        "Step 1: Open user dropdown menu in header",
+        "Step 2: Click 'Exit Demo' option",
+        "Step 3: Wait for navigation"
+      ],
+      "expected_result": "User is redirected to landing page at /",
+      "pass_criteria": "URL is '/' AND 'Try Demo' button is visible",
+      "status": "passed",
+      "passed": true,
+      "fix_attempts": 0,
+      "max_fix_attempts": 3,
+      "failure_reason": "",
+      "fix_description": "",
+      "blocked_reason": ""
+    }
+  ]
+}

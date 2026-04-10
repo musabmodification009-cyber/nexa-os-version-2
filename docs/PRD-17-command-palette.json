@@ -1,0 +1,123 @@
+{
+  "prdId": "PRD-17",
+  "feature": "Command Palette & Keyboard Shortcuts",
+  "description": "A global command palette triggered by CMD+K (or Ctrl+K) that provides instant search across items (by name, SKU, or barcode), navigation to any page, and quick actions (new item, new movement, new PO, etc.). The palette uses a fuzzy search algorithm and groups results by category (Items, Pages, Actions). Keyboard shortcuts are registered for common operations throughout the app. The CMD+K trigger button is visible in the persistent header (PRD-01).",
+  "buildOrder": 16,
+  "dependsOnPrds": ["PRD-06", "PRD-07"],
+  "stories": [
+    {
+      "id": "US-17-001",
+      "title": "Command palette dialog",
+      "description": "Create src/components/command/CommandPalette.tsx — a dialog using the shadcn Command component. Triggered by CMD+K / Ctrl+K globally or clicking the search trigger in the header. Shows a search input with placeholder 'Search items, pages, actions…'. Results grouped into sections: Items, Pages, Actions. Each result has an icon, label, and optional description. Arrow keys navigate, Enter selects, ESC closes. Renders as a centered overlay with backdrop blur.",
+      "acceptanceCriteria": [
+        "CMD+K and Ctrl+K open the palette",
+        "Header search trigger opens palette",
+        "Search input with placeholder text",
+        "Results grouped by section",
+        "Arrow key navigation with highlight",
+        "Enter selects highlighted result",
+        "ESC closes palette",
+        "Backdrop blur overlay",
+        "Responsive: full-width on mobile with padding"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Press CMD+K — palette opens. Type text — results appear. Arrow down — highlight moves. Press Enter — action taken. Press ESC — closes. Click header search — opens. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-01-005"],
+      "isPassed": true,
+      "notes": "CommandPalette using shadcn Command/CommandDialog. CMD+K and Ctrl+K open. Header search click opens. Pages/Actions sections. Arrow nav + Enter select. ESC closes. Backdrop blur overlay."
+    },
+    {
+      "id": "US-17-002",
+      "title": "Item search in command palette",
+      "description": "Add item search to CommandPalette. Searches across item name, SKU, and barcode fields using case-insensitive substring matching. Results show: item name, SKU (muted), quantity badge, status dot. Max 8 item results. Selecting an item navigates to /app/catalog?item=ID (opens item detail). Debounce search by 200ms. Shows 'No items found' when search has no matches.",
+      "acceptanceCriteria": [
+        "Searches item name, SKU, and barcode",
+        "Case-insensitive substring matching",
+        "Results show name, SKU, qty, status",
+        "Max 8 results displayed",
+        "Selecting navigates to catalog with item detail open",
+        "200ms debounce on input",
+        "No results message when empty",
+        "Items section hidden when no query"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open CMD+K. Type an item name — matching items appear with SKU and qty. Select one — navigates to catalog with item detail open. Type a SKU — matches by SKU. Type gibberish — 'No items found'. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-17-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "Disabled cmdk built-in filter, manual filtering by name/SKU/barcode. Status dots (green/amber/red). Max 8 results. No results message. Items section hidden when no query. Refactored into palette-pages, palette-actions, ItemResultRow."
+    },
+    {
+      "id": "US-17-003",
+      "title": "Page navigation in command palette",
+      "description": "Add a 'Pages' section to CommandPalette showing all navigable pages. Static list: Dashboard, Catalog, Movements, Suppliers, Purchase Orders, Requests, Locations, Settings. Each with appropriate icon (from lucide-react). Always visible (no search needed), filtered when user types. Selecting a page navigates to it and closes palette. Role-filtered: only show pages the user can access.",
+      "acceptanceCriteria": [
+        "Pages section with all app pages",
+        "Each page has icon and label",
+        "Visible without typing (default view)",
+        "Filtered when user types",
+        "Selection navigates and closes palette",
+        "Role-filtered based on permissions",
+        "Correct route paths for each page"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open CMD+K — Pages section shows all pages with icons. Select 'Suppliers' — navigates to /app/suppliers. Open again, type 'dash' — filters to Dashboard. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-17-001", "US-05-001"],
+      "isPassed": true,
+      "notes": "Pages filtered by role via canAccessRoute. Filtered when typing. Selection navigates and closes. Icons from lucide-react."
+    },
+    {
+      "id": "US-17-004",
+      "title": "Quick actions in command palette",
+      "description": "Add an 'Actions' section to CommandPalette. Actions: New Item (opens item form), New Movement (opens movement form), New Purchase Order (opens PO form), New Request (opens request form), New Supplier (opens supplier form), Export Items CSV (triggers export). Each action has icon and keyboard shortcut hint. Role-filtered: only show actions the user can perform. Actions execute and close the palette.",
+      "acceptanceCriteria": [
+        "Actions section with common operations",
+        "Each action has icon and shortcut hint",
+        "Role-filtered by permissions",
+        "Executing action closes palette",
+        "Actions trigger correct form/operation",
+        "Filtered when user types",
+        "Visible without typing"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open CMD+K — Actions section visible. Select 'New Item' — navigates to catalog and opens item form. Open again — 'New Movement' works. Switch to requestor — admin actions hidden. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-17-001", "US-05-004"],
+      "isPassed": true,
+      "notes": "Actions section with icons, shortcut hints (N I, N M, N P). Role-filtered by permissions. Filtered when typing. Selection executes action and closes palette."
+    },
+    {
+      "id": "US-17-005",
+      "title": "Global keyboard shortcuts",
+      "description": "Create src/hooks/useKeyboardShortcuts.ts — registers global keyboard shortcuts. Shortcuts: N then I = new item, N then M = new movement, N then P = new PO, N then R = new request, G then D = go to dashboard, G then C = go to catalog, G then M = go to movements, G then S = go to suppliers. Uses a two-key sequence detector with 500ms timeout. Shortcuts disabled when focus is in an input/textarea. Register in the app shell. Show shortcut hints in a help dialog opened by pressing '?'.",
+      "acceptanceCriteria": [
+        "Two-key sequences work (N+I, G+D, etc.)",
+        "500ms timeout between keys",
+        "Disabled when focus in input/textarea",
+        "Registered in app shell",
+        "'?' opens shortcuts help dialog",
+        "Help dialog lists all shortcuts",
+        "Role-filtered shortcuts",
+        "No conflicts with browser shortcuts"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode on dashboard. Press G then D — stays on dashboard. Press G then C — navigates to catalog. Press '?' — help dialog shows all shortcuts. Click into search input, press G then C — no navigation (disabled in inputs). No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-17-001", "US-05-004"],
+      "isPassed": true,
+      "notes": "useKeyboardShortcuts hook with two-key sequences (G+D, G+C, N+I, etc.), 500ms timeout, disabled in inputs. ShortcutsHelpDialog opened by ?. Registered in app shell."
+    }
+  ]
+}

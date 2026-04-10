@@ -1,0 +1,186 @@
+{
+  "prdId": "PRD-01",
+  "feature": "Design System & App Shell",
+  "description": "Establish the visual foundation and structural shell for Stackwise. This includes updating the CSS design system with a teal/amber color palette using oklch, importing Geist Sans and Geist Mono fonts, creating the authenticated app layout with a fixed 260px sidebar (grouped navigation sections for Operations, Procurement, Requests, Intelligence, Admin), a persistent top header bar with CMD+K search trigger and quick-action button, and defining all route stubs. The shell must be responsive — sidebar collapses on mobile. All subsequent features build inside this shell.",
+  "buildOrder": 1,
+  "dependsOnPrds": [],
+  "stories": [
+    {
+      "id": "US-01-001",
+      "title": "Update CSS design tokens with teal/amber palette",
+      "description": "Replace the default shadcn color values in src/styles.css :root and .dark blocks with the Stackwise teal/amber palette from design-guidelines.md. Add custom tokens for --stock-healthy, --stock-low, --stock-out, --amber-accent. Update the @theme inline block to register any new tokens. All values must use oklch format.",
+      "acceptanceCriteria": [
+        "All :root color variables use oklch values matching design-guidelines.md",
+        "Dark mode (.dark) has appropriately inverted/adjusted values",
+        "--stock-healthy (green), --stock-low (amber), --stock-out (red) tokens exist",
+        "--amber-accent token registered for CTA/warning use",
+        "Border radius set to 6px (--radius: 0.375rem)",
+        "No hardcoded colors in the file — all semantic tokens"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open the app at /. Inspect :root CSS variables in devtools. Confirm --primary uses oklch(0.55 0.17 162), --background uses oklch(0.985 0.005 80). Toggle .dark on html element and confirm dark mode tokens apply. Zero console errors."
+      },
+      "priority": 1,
+      "dependencies": [],
+      "isPassed": true,
+      "notes": "Verified: all oklch tokens applied, --primary=oklch(0.55 0.17 162), --background=oklch(0.985 0.005 80), stock/amber tokens present, radius=0.375rem."
+    },
+    {
+      "id": "US-01-002",
+      "title": "Add Geist Sans and Geist Mono fonts",
+      "description": "Import Geist Sans and Geist Mono web fonts. Configure them in the CSS so Geist Sans is the default body/UI font and Geist Mono is available via a utility class (font-mono). Update the html element in __root.tsx to apply the base font family.",
+      "acceptanceCriteria": [
+        "Geist Sans loads and renders as the default body font",
+        "Geist Mono is available via the font-mono Tailwind class",
+        "Fonts load without FOUT (font-display: swap or preload)",
+        "Both fonts render correctly on the placeholder page at /",
+        "No console errors related to font loading"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open /. Inspect the body element — computed font-family should show Geist Sans. Add a temporary element with class font-mono — it should render in Geist Mono. No 404s in network tab for font files. Zero console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-01-001"],
+      "isPassed": true,
+      "notes": "Variable woff2 fonts in public/fonts/. Body renders Geist Sans, font-mono renders Geist Mono."
+    },
+    {
+      "id": "US-01-003",
+      "title": "Create TypeScript types for inventory domain",
+      "description": "Create src/types/inventory.ts with all core TypeScript interfaces: Item, Category, Supplier, Location, StockMovement, PurchaseOrder, PurchaseOrderItem, InventoryRequest, RequestItem, CustomFieldDefinition, Notification, UserRole. Include enums for MovementType, OrderStatus, RequestStatus, ItemStatus, UserRoleType. These types will be used across all features.",
+      "acceptanceCriteria": [
+        "All interfaces defined with proper field types",
+        "Enums for MovementType (received, shipped, adjusted, transferred)",
+        "Enums for OrderStatus (draft, submitted, partial, received, cancelled)",
+        "Enums for RequestStatus (pending, approved, fulfilled, declined)",
+        "Enums for ItemStatus (active, discontinued, archived)",
+        "Enums for UserRoleType (admin, manager, requestor)",
+        "File exports all types and enums",
+        "File is under 250 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import any type from src/types/inventory.ts in a temporary file. TypeScript should compile without errors. No circular dependencies. Zero console errors on page load."
+      },
+      "priority": 3,
+      "dependencies": [],
+      "isPassed": true,
+      "notes": "174 lines. All interfaces and enums exported. Zero console errors."
+    },
+    {
+      "id": "US-01-004",
+      "title": "Create app layout route with sidebar and header",
+      "description": "Create src/routes/app.tsx as a layout route with <Outlet />. It renders a fixed 260px Sidebar on the left and a Header bar at top of the content area. The main content area fills remaining width with 32px padding on desktop, 16px on mobile. Create src/components/layout/Sidebar.tsx and src/components/layout/Header.tsx as separate files. Sidebar has the Stackwise logo/wordmark at top, then grouped nav sections: Operations (Dashboard, Catalog, Movements), Procurement (Suppliers, Purchase Orders), Requests, Intelligence (Analytics, AI Insights), Admin (Settings). Each nav item uses a Lucide icon + label. Active route is highlighted with teal background. Header has a search trigger button (displays 'Search... ⌘K'), a quick-action '+' button, and a user avatar placeholder on the right.",
+      "acceptanceCriteria": [
+        "Layout route at /app renders sidebar + header + outlet",
+        "Sidebar is exactly 260px wide on desktop, fixed position",
+        "Sidebar has Stackwise wordmark at top",
+        "Nav items grouped under section labels with Lucide icons",
+        "Active nav item has teal highlight background",
+        "Header spans the content area with search trigger and action button",
+        "Main content has 32px padding desktop, 16px mobile",
+        "On mobile (< 768px), sidebar is hidden by default",
+        "All colors use semantic tokens, no hardcoded values",
+        "Both Sidebar and Header files are under 250 lines each"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Navigate to /app. Sidebar should be visible on left at 260px wide with all navigation groups. Header bar at top with search and action buttons. Resize to 390px — sidebar should be hidden. Zero console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-01-001", "US-01-002"],
+      "isPassed": true,
+      "notes": "Sidebar 260px, all nav groups, Stackwise wordmark, header with search+action+avatar. Mobile: sidebar hidden, hamburger visible. Zero console errors."
+    },
+    {
+      "id": "US-01-005",
+      "title": "Create all app route stubs",
+      "description": "Create route files for every app page as stubs (page title + 'Coming soon' placeholder). Files: src/routes/app.dashboard.tsx (/app/dashboard), src/routes/app.catalog.tsx (/app/catalog), src/routes/app.movements.tsx (/app/movements), src/routes/app.suppliers.tsx (/app/suppliers), src/routes/app.purchase-orders.tsx (/app/purchase-orders), src/routes/app.requests.tsx (/app/requests), src/routes/app.analytics.tsx (/app/analytics), src/routes/app.ai-insights.tsx (/app/ai-insights), src/routes/app.settings.tsx (/app/settings). Each stub renders a centered heading with the page name. The /app route should redirect to /app/dashboard.",
+      "acceptanceCriteria": [
+        "All 9 route files exist and are valid TanStack routes",
+        "Each renders a heading with the feature name",
+        "Navigating to /app redirects to /app/dashboard",
+        "Each route is accessible via sidebar navigation links",
+        "No TypeScript errors in any route file",
+        "Route types auto-generate correctly in routeTree.gen.ts"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app — should redirect to /app/dashboard. Click each sidebar nav item in sequence: Catalog, Movements, Suppliers, Purchase Orders, Requests, Analytics, AI Insights, Settings. Each should load its stub page with the correct heading. Active nav item should highlight. No console errors on any page."
+      },
+      "priority": 5,
+      "dependencies": ["US-01-004"],
+      "isPassed": true,
+      "notes": "All 9 routes created. /app redirects to /app/dashboard via Navigate component. All sidebar links work. Zero console errors."
+    },
+    {
+      "id": "US-01-006",
+      "title": "Sidebar mobile toggle with hamburger menu",
+      "description": "On screens below 768px, the sidebar should be hidden by default and accessible via a hamburger menu button in the Header. Clicking the hamburger opens the sidebar as an overlay (Sheet component sliding from left). Clicking a nav item closes the sidebar. Clicking outside closes it. Add the hamburger button to Header.tsx and wire it with state. Use the Sheet component from shadcn.",
+      "acceptanceCriteria": [
+        "Sidebar hidden on screens < 768px",
+        "Hamburger icon visible in header on mobile",
+        "Clicking hamburger opens sidebar as left-sliding sheet overlay",
+        "Clicking a nav item closes the mobile sidebar",
+        "Clicking overlay backdrop closes the sidebar",
+        "Desktop sidebar remains fixed and always visible",
+        "Smooth 300ms slide animation on open/close"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Resize viewport to 390px width. Confirm sidebar is hidden. Hamburger icon should be visible in header. Click hamburger — sidebar slides in from left as overlay. Click 'Catalog' nav item — sidebar closes and page changes to catalog. Reopen sidebar, click outside — sidebar closes. Resize to 1200px — sidebar is always visible, no hamburger icon."
+      },
+      "priority": 6,
+      "dependencies": ["US-01-004"],
+      "isPassed": true,
+      "notes": "Already implemented in US-01-004. Hamburger opens Sheet from left, nav click closes it, click-outside closes it. Desktop sidebar always visible. Zero errors."
+    },
+    {
+      "id": "US-01-007",
+      "title": "Sidebar nav section collapse/expand",
+      "description": "Each nav group in the sidebar (Operations, Procurement, Intelligence, Admin) should be collapsible. Clicking the section header toggles its children visible/hidden with a smooth 150ms height animation. A small chevron icon rotates to indicate state. All sections default to expanded. Collapse state persists only during the session (no localStorage needed).",
+      "acceptanceCriteria": [
+        "Each nav group header is clickable to collapse/expand",
+        "Chevron icon rotates 90° on collapse",
+        "Smooth 150ms height transition animation",
+        "All sections start expanded by default",
+        "Collapsed sections hide their child nav items",
+        "Requests link (ungrouped) is always visible",
+        "Collapse state resets on page refresh (session only)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/dashboard. Click 'Operations' section header — Dashboard, Catalog, Movements items should animate closed. Chevron should rotate. Click again — items expand back. Repeat for Procurement, Intelligence, Admin sections. Requests link should always be visible (not in a collapsible group)."
+      },
+      "priority": 7,
+      "dependencies": ["US-01-004"],
+      "isPassed": true,
+      "notes": "Collapse/expand works for all 4 groups. Chevron rotates. Requests always visible. Conditional render instead of max-h trick for proper visibility. Zero errors."
+    },
+    {
+      "id": "US-01-008",
+      "title": "StatusBadge shared component",
+      "description": "Create src/components/StatusBadge.tsx — a reusable badge component for stock status display. Accepts a status prop: 'in-stock' | 'low-stock' | 'out-of-stock'. Renders a small colored dot + label text. Uses the --stock-healthy, --stock-low, --stock-out tokens. 'low-stock' dot should have a subtle CSS pulse animation. Component also supports item statuses: 'active', 'discontinued', 'archived' with appropriate muted styling.",
+      "acceptanceCriteria": [
+        "Component renders colored dot + text label",
+        "in-stock: green dot, 'In Stock' label",
+        "low-stock: amber dot with CSS pulse, 'Low Stock' label",
+        "out-of-stock: solid red dot, 'Out of Stock' label",
+        "active/discontinued/archived variants with muted colors",
+        "Uses semantic CSS tokens, not hardcoded colors",
+        "Component is under 80 lines",
+        "Exported and importable from src/components/StatusBadge"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Temporarily render all StatusBadge variants on the dashboard stub page. Confirm: green dot for in-stock, pulsing amber for low-stock, red for out-of-stock. Active/discontinued/archived render with muted styling. No console errors."
+      },
+      "priority": 8,
+      "dependencies": ["US-01-001"],
+      "isPassed": true,
+      "notes": "55 lines. All 6 variants render correctly. Pulse animation on low-stock. Semantic tokens only. Zero console errors."
+    }
+  ]
+}

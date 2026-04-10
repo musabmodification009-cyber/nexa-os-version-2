@@ -1,0 +1,166 @@
+{
+  "prdId": "PRD-14",
+  "feature": "Locations & Warehouses",
+  "description": "Hierarchical location management for organizing where inventory is physically stored. Locations follow a tree structure: warehouse → zone → aisle → shelf → bin. Each item can be assigned to a location. Stock can be transferred between locations (creating transfer-type movements). A locations page at /app/locations shows the location tree, per-location inventory summaries, and allows CRUD on locations. The catalog can be filtered by location. Admin and Manager can create/edit/delete locations. All roles can browse.",
+  "buildOrder": 14,
+  "dependsOnPrds": ["PRD-07", "PRD-09"],
+  "stories": [
+    {
+      "id": "US-14-001",
+      "title": "Location tree data and hooks",
+      "description": "Create src/hooks/useLocations.ts — data hooks for locations. useLocations() returns flat list with parent_id for tree building. useLocationTree() returns nested tree structure. useCreateLocation, useUpdateLocation, useDeleteLocation mutation hooks. Each location has: id, name, type (warehouse/zone/aisle/shelf/bin), parent_id (nullable), description, is_active. Demo mode reads/writes from DemoStore locations array.",
+      "acceptanceCriteria": [
+        "useLocations returns flat location list",
+        "useLocationTree returns nested tree",
+        "CRUD mutation hooks work with demo store",
+        "Location types: warehouse, zone, aisle, shelf, bin",
+        "Parent-child relationships maintained",
+        "Top-level locations have null parent_id"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import and call useLocations in a test component. Verify seed data returns 3 locations with correct hierarchy. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004", "US-02-007"],
+      "isPassed": true,
+      "notes": "Updated Location type with parentId, description, LocationType. Hierarchical seed data (3 warehouses, zones, aisles). DemoStore CRUD. useLocations, useLocationTree hooks with buildTree. Mutation hooks added."
+    },
+    {
+      "id": "US-14-002",
+      "title": "Location tree view component",
+      "description": "Create src/components/locations/LocationTree.tsx — a collapsible tree view showing the location hierarchy. Each node shows: location name, type badge (color-coded: warehouse=teal, zone=blue, aisle=purple, shelf=amber, bin=gray), item count (number of items at this location), and expand/collapse toggle for parent nodes. Indentation by depth level. Click a node to select it (highlights). Selected location shown in a detail panel. Empty state: 'No locations configured yet.'",
+      "acceptanceCriteria": [
+        "Tree renders hierarchical locations with indentation",
+        "Type badges with correct colors",
+        "Item count per location",
+        "Expand/collapse for parent nodes",
+        "Click to select with highlight",
+        "Empty state message",
+        "Responsive: full width on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/locations. Tree shows seed locations in hierarchy. Expand/collapse works. Type badges colored. Click a node — highlighted. Item counts shown. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-14-001"],
+      "isPassed": true,
+      "notes": "Collapsible tree with type badges, item counts, selection highlight, expand/collapse. Added Locations to sidebar nav. Created basic page route."
+    },
+    {
+      "id": "US-14-003",
+      "title": "Location create/edit form",
+      "description": "Create src/components/locations/LocationFormSheet.tsx — a Sheet for creating/editing locations. Fields: Name (required), Type (select: warehouse/zone/aisle/shelf/bin), Parent Location (select from existing locations, filtered by valid parent types — warehouse can't be inside a bin), Description (textarea), Active toggle. Type constrains parent options: warehouse has no parent, zone must be in warehouse, aisle in zone, shelf in aisle, bin in shelf. Zod validation. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Sheet with all location fields",
+        "Name required validation",
+        "Type select with all 5 options",
+        "Parent select filtered by valid hierarchy",
+        "Warehouse: no parent allowed",
+        "Zone: only warehouse parents",
+        "Create and edit modes",
+        "Toast on save",
+        "Admin/Manager only"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Create new warehouse (no parent) — saved. Create zone inside it — parent dropdown shows only warehouses. Try creating zone with no parent — validation. Edit location — pre-filled. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-14-001", "US-05-004"],
+      "isPassed": true,
+      "notes": "LocationFormSheet with Zod validation, hierarchy-constrained parent select, create/edit modes. Wired into page with New Location button. Admin/Manager gated."
+    },
+    {
+      "id": "US-14-004",
+      "title": "Location inventory summary",
+      "description": "Create src/components/locations/LocationSummary.tsx — shown when a location is selected in the tree. Displays: location name, type, full path (Warehouse > Zone > Aisle), description, item count, total inventory value (sum of qty × cost for items at this location). Compact item list showing top 10 items at this location with name, SKU, qty, status badge. 'View All in Catalog' link to /app/catalog?location=ID. For parent locations, aggregates include all children.",
+      "acceptanceCriteria": [
+        "Shows location details and full path",
+        "Item count and total value",
+        "Top 10 items with name, SKU, qty, status",
+        "View All link to catalog filtered by location",
+        "Parent locations aggregate children's items",
+        "Empty location: 'No items stored here'",
+        "Responsive layout"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Select a location with items — summary shows details, item list, value. Select parent location — aggregates children. Select empty location — empty state. 'View All' links to catalog. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-14-002", "US-02-004"],
+      "isPassed": true,
+      "notes": "LocationSummary component with full path, item count, total value, top 10 items, parent aggregation via getDescendantIds. Wired into locations page with findNode helper."
+    },
+    {
+      "id": "US-14-005",
+      "title": "Stock transfer between locations",
+      "description": "Create src/components/locations/TransferStockSheet.tsx — a Sheet for transferring stock between locations. Fields: Item (searchable select, pre-filled if opened from location summary), From Location (select), To Location (select, cannot equal From), Quantity (number, min 1, max available at From location). On submit: creates a stock movement with type 'transferred', from_location and to_location fields. Updates item's location_id if fully transferred. Toast confirmation. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Sheet with item, from, to, quantity fields",
+        "From and To cannot be the same location",
+        "Quantity constrained to available at From location",
+        "Creates transfer movement on submit",
+        "Item location_id updated if fully transferred",
+        "Toast confirmation",
+        "Admin/Manager only",
+        "Pre-fills item when opened from location context"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open transfer form. Select item, from location, to location (different), enter valid qty. Submit — movement created. Check movements page — transfer type movement exists. Try same from/to — validation error. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-14-001", "US-09-003", "US-05-004"],
+      "isPassed": true,
+      "notes": "TransferStockSheet with item/from/to/qty fields, Zod validation, auto-fill from location on item select, creates Transferred movement. DemoStore updated to handle Transferred type by updating locationId."
+    },
+    {
+      "id": "US-14-006",
+      "title": "Delete location with safety checks",
+      "description": "Add delete action for locations (admin only). Before deletion, check: if location has items, show warning 'This location has X items. They will become unassigned.' If location has children, prevent deletion: 'Cannot delete a location with sub-locations. Remove or move children first.' AlertDialog confirmation. Successful delete removes location and unsets location_id on affected items.",
+      "acceptanceCriteria": [
+        "Delete option for admin only",
+        "Warning if location has items",
+        "Block if location has children",
+        "AlertDialog confirmation",
+        "Items become unassigned on delete",
+        "Toast confirmation",
+        "Tree refreshes after deletion"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode (admin). Try deleting location with children — blocked. Try deleting leaf location with items — warning shown, confirm — deleted, items unassigned. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-14-002", "US-05-004"],
+      "isPassed": true,
+      "notes": "LocationDeleteDialog with AlertDialog. Blocks deletion if children exist. Warns about item count. Unassigns items on confirm. Admin-only via delete_item permission. Integrated into LocationTree with hover-reveal trash icon."
+    },
+    {
+      "id": "US-14-007",
+      "title": "Locations page composition",
+      "description": "Compose the full /app/locations page in src/routes/app.locations.tsx. Layout: header with 'Locations' heading, location count, '+ New Location' and 'Transfer Stock' buttons (admin/manager). Two-panel layout: left panel with LocationTree (40% width), right panel with LocationSummary (60% width). On mobile: single column, tree above summary. Page title 'Locations — Stackwise'.",
+      "acceptanceCriteria": [
+        "Page heading with count and action buttons",
+        "Two-panel layout: tree left, summary right",
+        "Mobile: stacked single column",
+        "New Location opens form sheet",
+        "Transfer Stock opens transfer sheet",
+        "Tree selection updates summary panel",
+        "Page title set correctly",
+        "Requestor: no action buttons"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/locations. Page renders with tree and summary panels. Click location — summary updates. Click New Location — form opens. Click Transfer — transfer form opens. Resize to mobile — stacks. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-14-002", "US-14-003", "US-14-004", "US-14-005", "US-14-006"],
+      "isPassed": true,
+      "notes": "Page already fully composed from prior stories. Verified: two-panel layout, mobile stacking via lg:grid-cols, both sheets open, requestor role hides action buttons."
+    }
+  ]
+}

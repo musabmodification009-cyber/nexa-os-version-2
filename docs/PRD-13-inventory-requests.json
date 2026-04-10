@@ -1,0 +1,189 @@
+{
+  "prdId": "PRD-13",
+  "feature": "Inventory Requests",
+  "description": "Inventory requests allow Requestor-role users to submit requests for items they need. Each request contains line items with quantities and a reason/justification. Requests go through an approval workflow: pending → approved / partially_fulfilled / declined. Managers and Admins see an approval queue where they can approve (full or partial qty), or decline with a reason. Approved requests auto-generate stock movements (type: shipped) that reduce item quantities. Requestors can track their own requests' status. The requests page at /app/requests shows different views based on role: requestors see their own requests, managers/admins see the approval queue.",
+  "buildOrder": 13,
+  "dependsOnPrds": ["PRD-09", "PRD-05"],
+  "stories": [
+    {
+      "id": "US-13-001",
+      "title": "Request submission form",
+      "description": "Create src/components/requests/RequestFormSheet.tsx — a Sheet (560px) for submitting inventory requests. Fields: Title (required, short description), Reason/Justification (textarea, required), Priority (select: normal, urgent), line items section with dynamic rows: Item (searchable select from catalog), Quantity (number, min 1, max available qty). Add Item button and remove (X) per row. At least one line item required. Save calls useCreateRequest. Requestor, Manager, and Admin can submit.",
+      "acceptanceCriteria": [
+        "Sheet with title, reason, priority fields",
+        "Dynamic line items with searchable item select",
+        "Quantity constrained to 1..available qty",
+        "At least one line item required",
+        "Add/remove line item rows",
+        "Zod validation on all fields",
+        "Toast on successful submission",
+        "Responsive on mobile (390px)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Navigate to /app/requests. Click 'New Request'. Fill title and reason, add two line items with valid quantities. Submit — request created, toast shown. Try submitting empty — validation errors. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-007", "US-02-004"],
+      "isPassed": true,
+      "notes": "RequestFormSheet with title, reason, priority, dynamic line items. Zod validation. Added title/priority/declineReason fields to InventoryRequest type. Added PartiallyFulfilled/Cancelled to RequestStatus enum. Enhanced seed data with 5 requests."
+    },
+    {
+      "id": "US-13-002",
+      "title": "Requests list table — requestor view",
+      "description": "Create src/components/requests/RequestsTable.tsx — a data table showing requests. For Requestor role: shows only their own requests. Columns: Request ID, Title, Status (badge: pending=blue, approved=green, partially_fulfilled=amber, declined=red, fulfilled=green), Items Count, Priority (normal/urgent badge), Created Date. Pagination at 20. Sorted newest first. Row click opens detail. Empty state: 'No requests submitted yet.'",
+      "acceptanceCriteria": [
+        "Table shows requestor's own requests only",
+        "All columns render correctly",
+        "Status badges with correct colors",
+        "Priority badge (urgent = amber)",
+        "Pagination at 20",
+        "Sorted newest first",
+        "Row click opens detail",
+        "Empty state message",
+        "Responsive: horizontal scroll on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode as requestor. /app/requests shows only own requests from seed data. Status badges colored correctly. Click row — detail opens. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-02-004", "US-05-001"],
+      "isPassed": true,
+      "notes": "RequestsTable with status/priority badges, sorted newest first, empty state, row click handler."
+    },
+    {
+      "id": "US-13-003",
+      "title": "Approval queue — manager/admin view",
+      "description": "Extend RequestsTable for Manager/Admin roles to show ALL requests with an 'Approval Queue' tab showing pending requests first. Two tabs: 'All Requests' (all statuses) and 'Pending Approval' (pending only, sorted by priority urgent-first then oldest-first). Filter by status, requestor, date range. Pending count badge on the tab.",
+      "acceptanceCriteria": [
+        "Two tabs: All Requests, Pending Approval",
+        "Pending tab shows only pending, urgent first",
+        "Pending count badge on tab",
+        "Filters: status, requestor, date range",
+        "Admin/Manager see all requests from all users",
+        "Requestor column shows who submitted",
+        "Filters compose with AND logic"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode as admin. /app/requests shows two tabs. Pending tab shows only pending requests, urgent ones first. All tab shows all statuses. Filter by status — works. Requestor column visible. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-13-002", "US-05-001"],
+      "isPassed": true,
+      "notes": "Tabs with pending count badge. Pending tab sorts urgent-first then oldest-first via preSorted prop. Filters: status toggles, requestor search, date range. Requestor column for admin/manager."
+    },
+    {
+      "id": "US-13-004",
+      "title": "Request detail sheet",
+      "description": "Create src/components/requests/RequestDetailSheet.tsx — a Sheet (560px) showing full request details. Header: Request ID, status badge, priority badge, submitted by (name), date. Body: title, reason/justification text. Line items table: item name, SKU, qty requested, qty approved (if actioned), status per line. Footer: approval actions (for manager/admin on pending requests). Timeline of status changes at bottom.",
+      "acceptanceCriteria": [
+        "Shows request ID, status, priority, submitter, date",
+        "Title and reason displayed",
+        "Line items with requested and approved quantities",
+        "Approval action buttons for manager/admin on pending",
+        "Status change timeline",
+        "Close button and click-outside closes",
+        "Responsive on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode as admin. Open a pending request detail. All info displayed. Approval buttons visible. Open as requestor — no approval buttons. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-13-002"],
+      "isPassed": true,
+      "notes": "RequestDetailSheet with status/priority badges, line items table, timeline, and role-gated approval buttons. Wired into page with detail open state."
+    },
+    {
+      "id": "US-13-005",
+      "title": "Approve and decline actions",
+      "description": "Create src/components/requests/ApprovalActions.tsx — action buttons in the request detail sheet for pending requests. 'Approve' button: approves full requested quantities. 'Partial Fulfill' button: opens inline form to enter approved qty per line item (0 to requested). 'Decline' button: opens dialog requiring a decline reason (textarea, required). On approve/partial: status → approved/partially_fulfilled. On decline: status → declined. All actions require confirmation dialog. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Approve button approves full quantities",
+        "Partial Fulfill allows per-line qty entry",
+        "Decline requires reason text",
+        "All actions have confirmation dialogs",
+        "Status updates correctly after each action",
+        "Toast confirmation after action",
+        "Admin/Manager only",
+        "Buttons disabled during processing (loading state)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode as admin. Open pending request. Click Approve — confirm — status changes to approved. Open another pending request. Click Partial Fulfill — adjust quantities — confirm — status partially_fulfilled. Open another — Decline — enter reason — confirm — status declined. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-13-004", "US-05-004", "US-02-007"],
+      "isPassed": true,
+      "notes": "useApprovalActions hook with approve/decline/partial dialogs. Spread array in useRequests to detect mutations. AlertDialog confirmations for all actions."
+    },
+    {
+      "id": "US-13-006",
+      "title": "Auto-generate stock movements on approval",
+      "description": "When a request is approved or partially fulfilled, auto-create stock movements (type: shipped) for each approved line item. Movement quantity equals approved quantity. Movement reference links to request ID. Item quantity_on_hand decreases by approved amount. If approving would make quantity negative, block with error: 'Insufficient stock for [item name] (available: X, requested: Y)'. Check stock availability before confirming approval.",
+      "acceptanceCriteria": [
+        "Stock movements created on approve/partial fulfill",
+        "Movement type is 'shipped' with request reference",
+        "Item qty_on_hand decreased by approved amount",
+        "Insufficient stock check before approval",
+        "Error message names the item and shows available vs requested",
+        "Multiple line items each get their own movement",
+        "Movements visible on movements page after approval"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode as admin. Note an item's current qty. Approve a request containing that item. Check item qty — decreased. Check movements page — new shipped movement with request reference. Try approving more than available — error shown. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-13-005", "US-09-003"],
+      "isPassed": true,
+      "notes": "Stock check before approve/partial. Auto-creates shipped movements with request reference. Uses demoStore directly for atomic multi-op. Verified approve toast and status update via e2e."
+    },
+    {
+      "id": "US-13-007",
+      "title": "Request status tracking for requestors",
+      "description": "Enhance the requestor view with status tracking. In RequestDetailSheet, show a visual status stepper: Submitted → Under Review → Approved/Declined → Fulfilled. For declined requests, show the decline reason prominently. For partially fulfilled, show which items and quantities were approved vs declined. Add a 'Cancel Request' button for pending requests (requestor can cancel their own).",
+      "acceptanceCriteria": [
+        "Visual status stepper in detail sheet",
+        "Decline reason shown prominently for declined requests",
+        "Partial fulfillment shows approved vs declined per line",
+        "Cancel button for own pending requests",
+        "Cancel changes status to 'cancelled'",
+        "Cancel requires confirmation dialog",
+        "Stepper highlights current status"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode as requestor. Open approved request — stepper shows progress. Open declined request — decline reason visible. Open pending request — Cancel button visible, click it — confirm — status cancelled. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-13-004", "US-13-005"],
+      "isPassed": true,
+      "notes": "StatusStepper component with 4-step visual progress. Cancel button for requestor's own pending requests with confirmation dialog. Decline reason shown prominently."
+    },
+    {
+      "id": "US-13-008",
+      "title": "Requests page composition",
+      "description": "Compose the full /app/requests page in src/routes/app.requests.tsx. Header: 'Inventory Requests' heading, request count, '+ New Request' button (all roles). Tabs for manager/admin, simple list for requestor. Detail sheet wired to row clicks. Form sheet for new requests. URL param ?request=ID for direct linking. Page title 'Requests — Stackwise'.",
+      "acceptanceCriteria": [
+        "Page heading with count and New Request button",
+        "Role-based view: tabs for manager/admin, list for requestor",
+        "Row click opens detail, URL updates",
+        "?request=ID opens detail on load",
+        "New Request button opens form sheet",
+        "Page title set correctly",
+        "All components composed correctly"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. /app/requests renders fully. Click New Request — form opens. Click row — detail opens, URL updates. Navigate to ?request=ID — detail opens. Switch roles — view changes (tabs vs list). No console errors."
+      },
+      "priority": 8,
+      "dependencies": ["US-13-001", "US-13-002", "US-13-003", "US-13-004", "US-13-005", "US-13-006", "US-13-007"],
+      "isPassed": true,
+      "notes": "Added validateSearch for ?request=ID deep linking. URL updates on row click and clears on close. All components composed."
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "prdId": "PRD-12",
+  "feature": "Purchase Orders — Receiving & Print",
+  "description": "This PRD covers the shipment receiving workflow for purchase orders and printable PO summaries. When a shipment arrives, a manager opens the PO and enters received quantities per line item. Partial receives update the PO status to partially_received; when all line items are fully received, the status becomes fully_received. Each receive action auto-creates stock movements (type: received) that update item quantities. The receiving flow is accessed from the PO detail sheet. A printable/downloadable PO summary is also provided for physical records.",
+  "buildOrder": 12,
+  "dependsOnPrds": ["PRD-11"],
+  "stories": [
+    {
+      "id": "US-12-001",
+      "title": "Receive shipment form",
+      "description": "Create src/components/purchase-orders/ReceiveShipmentSheet.tsx — a Sheet (560px) opened from the PO detail sheet via a 'Receive Shipment' button (visible only for submitted/partially_received POs). Shows each line item with: Item Name, SKU, Qty Ordered, Qty Previously Received, Qty Remaining, and an input for Qty Receiving (number, min 0, max remaining). Pre-fills Qty Receiving with remaining amount. Notes field for shipment notes. 'Confirm Receipt' button at bottom.",
+      "acceptanceCriteria": [
+        "Sheet lists all PO line items",
+        "Shows ordered, previously received, and remaining quantities",
+        "Qty Receiving input constrained to 0..remaining",
+        "Pre-filled with remaining quantity",
+        "Notes textarea for shipment notes",
+        "Confirm Receipt button enabled only when at least one line has qty > 0",
+        "Admin/Manager only",
+        "Responsive layout on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open a submitted PO detail. Click 'Receive Shipment'. Sheet shows all line items with correct quantities. Change qty receiving to 0 for all — confirm disabled. Enter valid qty — confirm enabled. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-11-007", "US-05-004"],
+      "isPassed": true,
+      "notes": "ReceiveShipmentSheet with line items, qty inputs constrained to 0..remaining, pre-filled. Confirm disabled when all 0. Wired via onReceive prop in detail sheet."
+    },
+    {
+      "id": "US-12-002",
+      "title": "Receive confirmation and stock movement creation",
+      "description": "On confirm receipt: for each line item with qty > 0, create a stock movement (type: received, item_id, quantity, reference: PO number, performed_by: current user). Update the PO line item's received_quantity. Recalculate PO status: if all lines fully received → fully_received, else → partially_received. Update item quantity_on_hand for each received item. Show toast with summary: 'Received X items across Y line items'. Close the receive sheet and refresh PO detail.",
+      "acceptanceCriteria": [
+        "Stock movements created for each received line item",
+        "Movement type is 'received' with PO reference",
+        "PO line item received_quantity updated",
+        "PO status transitions correctly (partially/fully received)",
+        "Item quantity_on_hand increased by received amount",
+        "Toast summary shown",
+        "Sheet closes and PO detail refreshes",
+        "Works for partial receives (some lines, not all)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open submitted PO. Receive partial qty for one line item. Confirm. PO status changes to partially_received. Check movements page — new received movement exists. Check item — qty increased. Receive remaining — PO becomes fully_received. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-12-001", "US-09-003", "US-02-007"],
+      "isPassed": true,
+      "notes": "On confirm: creates stock movements (type received, PO ref), updates line item quantityReceived, recalculates PO status (partial/fully received), updates item currentStock. Toast with summary. Partial + full receive flow verified."
+    },
+    {
+      "id": "US-12-003",
+      "title": "Receiving history on PO detail",
+      "description": "Add a 'Receiving History' section to PurchaseOrderDetailSheet below the line items table. Shows a timeline of past receives: date, user who received, items received (compact list with qty), and notes. Data derived from stock movements with reference matching PO number. Sorted newest first. Empty state: 'No shipments received yet.' Only shown for submitted/partially_received/fully_received POs.",
+      "acceptanceCriteria": [
+        "Timeline of past receives with date, user, items, notes",
+        "Data from stock movements filtered by PO reference",
+        "Sorted newest first",
+        "Empty state message for no receives",
+        "Only shown for relevant PO statuses (not draft/cancelled)",
+        "Compact layout within the detail sheet"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open a PO that has been partially received. Receiving history section shows past receives with correct data. Open a draft PO — no receiving history section. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-12-002", "US-11-007"],
+      "isPassed": true,
+      "notes": "Receiving History section in detail sheet. Filters movements by PO orderNumber reference. Sorted newest first. Empty state for no receives. Hidden for draft/cancelled."
+    },
+    {
+      "id": "US-12-004",
+      "title": "Line items received progress indicators",
+      "description": "Update the line items table in PurchaseOrderDetailSheet to show receiving progress. Add columns: Received (qty received so far), Remaining (qty ordered - received). Add a progress bar per line item showing percentage received. Fully received lines get a green checkmark. Color coding: 0% = gray, 1-99% = amber, 100% = green.",
+      "acceptanceCriteria": [
+        "Received and Remaining columns added to line items",
+        "Progress bar per line item",
+        "Color coding: gray/amber/green by percentage",
+        "Green checkmark for fully received lines",
+        "Progress updates after receiving",
+        "Works correctly for partial receives across multiple shipments"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open a partially received PO. Line items show received/remaining columns with progress bars. Fully received lines show green check. Partially received lines show amber bar. Unreceived lines show gray. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-12-002", "US-11-007"],
+      "isPassed": true,
+      "notes": "Ordered/Received/Remaining columns + progress bar per line. Color: gray=0%, amber=partial, green=100% with checkmark. Updates after receiving."
+    },
+    {
+      "id": "US-12-005",
+      "title": "Printable PO summary",
+      "description": "Create src/components/purchase-orders/POPrintView.tsx — a print-optimized view of a PO. Triggered by a 'Print' button in the PO detail sheet. Uses window.print() with @media print CSS. Layout: company name 'Stackwise' header, PO number, date, supplier info (name, contact, address), line items table (item, SKU, qty ordered, unit cost, line total), total cost, expected delivery, notes, and receiving status summary. Hide all app chrome in print. A4 portrait optimized.",
+      "acceptanceCriteria": [
+        "Print button in PO detail sheet",
+        "window.print() triggered",
+        "@media print CSS hides app chrome",
+        "A4 portrait layout",
+        "Shows: header, PO number, supplier info, line items, totals, dates, notes",
+        "Receiving status summary included",
+        "Clean professional layout suitable for physical records"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open a PO detail. Click Print. Print preview shows clean formatted PO with all info. App sidebar/header hidden. Line items table readable. Close print dialog. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-11-007"],
+      "isPassed": true,
+      "notes": "POPrintView component with Stackwise header, supplier info, line items, totals, receiving summary. Print button triggers window.print(). @media print CSS hides app chrome. A4 portrait."
+    },
+    {
+      "id": "US-12-006",
+      "title": "Receive button visibility and guards",
+      "description": "Ensure the 'Receive Shipment' button in PO detail is only visible for submitted and partially_received POs. Hidden for draft, fully_received, and cancelled. Button disabled during receiving (loading state). If a PO becomes fully_received, the button disappears and is replaced with a 'Fully Received' badge. Requestor role cannot see the receive button.",
+      "acceptanceCriteria": [
+        "Receive button visible only for submitted/partially_received",
+        "Hidden for draft, fully_received, cancelled",
+        "Loading state while processing",
+        "Fully Received badge replaces button when complete",
+        "Requestor cannot see receive button",
+        "Button state updates after receiving without page refresh"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Check draft PO — no receive button. Check submitted PO — receive button visible. Check fully received PO — 'Fully Received' badge shown. Switch to requestor — receive button hidden on submitted PO. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-12-001", "US-05-004"],
+      "isPassed": true,
+      "notes": "Receive button guarded by canReceive && canEdit. Fully Received badge shown for received POs. Requestor role cannot see button."
+    }
+  ]
+}

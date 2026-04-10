@@ -1,0 +1,190 @@
+{
+  "prdId": "PRD-08",
+  "feature": "Product Catalog — Detail View & Bulk Edit",
+  "description": "Extends the product catalog with two major features: 1) A rich item detail side-sheet that opens when clicking a row in the catalog table, showing all item information organized in tabs (Overview, Movement History, Custom Fields), a barcode display, and quick action buttons. 2) Bulk editing via checkbox selection in the table, which reveals a floating action bar at the bottom of the screen allowing multi-item updates to category, supplier, location, or status in one action. Both features respect role permissions.",
+  "buildOrder": 8,
+  "dependsOnPrds": ["PRD-07"],
+  "stories": [
+    {
+      "id": "US-08-001",
+      "title": "Item detail sheet — overview tab",
+      "description": "Create src/components/catalog/ItemDetailSheet.tsx — a Sheet sliding from right (560px wide desktop, full-width mobile). Opens when clicking a table row in the catalog. Overview tab shows: item name as title, status badge, image placeholder, and a two-column detail grid: SKU (mono), Barcode (mono), Category, Tags, Unit of Measure, Quantity on Hand (large, colored by status), Reorder Threshold, Reorder Quantity, Preferred Supplier, Location, Cost Per Unit, Sale Price, Created/Updated dates. Quick actions in header: Edit button (opens ItemFormSheet), Archive button. Admin/Manager only actions via PermissionGate.",
+      "acceptanceCriteria": [
+        "Sheet opens on table row click, 560px wide desktop, full-width mobile",
+        "Item name as title with StatusBadge",
+        "Two-column detail grid with all item fields",
+        "SKU and barcode in font-mono",
+        "Quantity on Hand prominently displayed with color",
+        "Edit and Archive buttons visible for admin/manager only",
+        "Edit opens ItemFormSheet in edit mode",
+        "Close button and click-outside-to-close",
+        "Component under 250 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Click a table row. Detail sheet slides in from right showing all item info. SKU in monospace. Quantity colored by status. Edit button visible (admin). Close sheet. Resize to 390px — sheet is full width. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-07-001", "US-07-005"],
+      "isPassed": true,
+      "notes": "ItemDetailSheet created with overview tab, 560px desktop/full mobile, all fields in 2-col grid, qty colored by stock status, edit/archive via PermissionGate. E2E verified."
+    },
+    {
+      "id": "US-08-002",
+      "title": "Item detail sheet — movement history tab",
+      "description": "Add a 'History' tab to the ItemDetailSheet that shows the movement history for this specific item. Uses a filtered list of movements from useMovements filtered by item ID. Displays as a vertical timeline: each entry shows movement type icon, quantity (+/-), performer, reference note, and timestamp. Most recent at top. Shows up to 20 entries with a 'Load More' or 'View All in Movements' link. Empty state: 'No movement history for this item.'",
+      "acceptanceCriteria": [
+        "Tab labeled 'History' in detail sheet",
+        "Vertical timeline of movements for this item only",
+        "Each entry: type icon, quantity with direction, performer, note, timestamp",
+        "Newest first ordering",
+        "Max 20 entries shown with 'View All' link",
+        "Empty state message when no movements",
+        "'View All' links to /app/movements?item=ID"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Click an item. Switch to History tab. Movement entries shown (from seed data). Each has icon, quantity, timestamp. Click 'View All' — navigates to movements page. Try an item with no movements — empty state shown. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-08-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "MovementTimeline component with type icons, +/- quantities, performer, reference, relative timestamps. View All links to /app/movements?item=ID. Empty state for items with no movements."
+    },
+    {
+      "id": "US-08-003",
+      "title": "Item detail sheet — barcode display",
+      "description": "Add a barcode visual to the Overview tab of ItemDetailSheet. Below the detail grid, show the item's barcode number rendered as a stylized barcode representation (use CSS-based barcode visualization or a simple formatted display with vertical bars pattern). Include a 'Print Label' button that opens browser print dialog with a print-optimized view showing item name, SKU, barcode, and location. If no barcode is set, show 'No barcode assigned' with muted text.",
+      "acceptanceCriteria": [
+        "Barcode number displayed in large font-mono text",
+        "Visual barcode representation (CSS bars or SVG)",
+        "'Print Label' button triggers window.print with optimized layout",
+        "Print view shows: item name, SKU, barcode, location",
+        "No barcode: shows 'No barcode assigned' message",
+        "Print styles hide everything except label content"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open item detail sheet for an item with a barcode. Barcode number visible in monospace. Visual barcode bars shown. Click 'Print Label' — print dialog opens (browser native). For item without barcode — 'No barcode assigned' message. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-08-001"],
+      "isPassed": true,
+      "notes": "BarcodeDisplay component with CSS bars, monospace number, Print Label opens print window. No-barcode shows empty state."
+    },
+    {
+      "id": "US-08-004",
+      "title": "Item detail sheet — custom fields tab",
+      "description": "Add a 'Custom Fields' tab to ItemDetailSheet. Displays any custom field values stored in the item's custom_fields JSONB. For demo, show 2-3 pre-defined custom fields from seed data (e.g., 'Lot Number', 'Expiration Date', 'Color'). Each field shows label and value. Admin/manager can edit values inline (click to edit pattern). Empty state: 'No custom fields defined. Admins can add custom fields in Settings.'",
+      "acceptanceCriteria": [
+        "Tab labeled 'Custom Fields' in detail sheet",
+        "Lists custom field name-value pairs",
+        "Admin/manager: click-to-edit on values",
+        "Requestor: read-only display",
+        "Save updates item's custom_fields",
+        "Empty state with link to settings for admins",
+        "Renders appropriate input type per field type (text, number, date, boolean)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, open item detail. Switch to Custom Fields tab. If seed data has custom fields, they display. Click a value to edit (admin) — input appears, change and save. Switch to requestor — values read-only. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-08-001", "US-05-004"],
+      "isPassed": true,
+      "notes": "CustomFieldsTab with click-to-edit for admin/manager, read-only for requestor. Seed data has custom fields on 4 items. Empty state for items without fields."
+    },
+    {
+      "id": "US-08-005",
+      "title": "Bulk select checkboxes in catalog table",
+      "description": "Wire up the checkbox column in CatalogTable for bulk selection. Header checkbox toggles select-all on current page. Individual row checkboxes toggle single item. Selected count tracked in state. Selection persists across filter/sort changes but clears on page change. Visual: selected rows have a subtle teal background tint. Export selectedItemIds array for use by the floating action bar.",
+      "acceptanceCriteria": [
+        "Header checkbox selects/deselects all items on current page",
+        "Individual checkboxes toggle single items",
+        "Selected rows have teal background tint",
+        "Selection count available in parent state",
+        "Selection clears on page navigation",
+        "Selection persists during filter/sort on same page",
+        "Checkbox column only visible for admin/manager roles"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Click header checkbox — all 20 rows selected with teal tint. Uncheck header — all deselected. Check 3 individual items — 3 selected. Sort by name — selection persists. Change page — selection clears. Switch to requestor — no checkboxes. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-07-001", "US-05-004"],
+      "isPassed": true,
+      "notes": "showCheckboxes prop conditionally renders checkbox column. Selected rows get bg-primary/5 tint. Page change clears selection. Requestor sees no checkboxes."
+    },
+    {
+      "id": "US-08-006",
+      "title": "Bulk action floating bar",
+      "description": "Create src/components/catalog/BulkActionBar.tsx — a floating bar that appears at the bottom of the screen when 1+ items are selected. Shows: '[N] items selected', and action buttons: 'Update Category' (opens dropdown), 'Update Supplier' (opens dropdown), 'Update Location' (opens dropdown), 'Update Status' (opens dropdown), 'Deselect All'. Each dropdown applies the change to all selected items via useUpdateItem mutations. Bar animates in from bottom with 300ms transition. Disappears when selection is cleared.",
+      "acceptanceCriteria": [
+        "Bar appears when ≥1 items selected, hidden when 0",
+        "Shows selected count",
+        "4 update action dropdowns: category, supplier, location, status",
+        "Selecting a value applies to all selected items",
+        "Toast confirmation: 'Updated [N] items'",
+        "'Deselect All' clears selection and hides bar",
+        "300ms slide-up animation",
+        "Bar fixed at bottom, doesn't overlap pagination",
+        "Component under 200 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Select 3 items. Floating bar slides up showing '3 items selected'. Click 'Update Status' → select 'Archived'. Toast shows 'Updated 3 items'. Items update in table. Click 'Deselect All' — bar disappears. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-08-005", "US-02-007"],
+      "isPassed": true,
+      "notes": "BulkActionBar with 4 update dropdowns, deselect, slide-up animation. Also fixed missing Toaster in __root.tsx."
+    },
+    {
+      "id": "US-08-007",
+      "title": "Row actions dropdown menu",
+      "description": "Add a three-dot actions menu (DropdownMenu) as the last column in the catalog table. Actions: 'View Details' (opens detail sheet), 'Edit' (opens form sheet in edit mode), 'Log Movement' (navigates to /app/movements?item=ID, stubbed for now), 'Archive' / 'Delete' (with confirmation). Actions filtered by role: requestor sees only 'View Details', manager adds 'Edit' and 'Log Movement', admin adds 'Archive/Delete'. Menu trigger is a vertical ellipsis icon.",
+      "acceptanceCriteria": [
+        "Three-dot menu on each table row",
+        "Actions filtered by role",
+        "Requestor: View Details only",
+        "Manager: View Details, Edit, Log Movement",
+        "Admin: all actions including Archive/Delete",
+        "'View Details' opens ItemDetailSheet",
+        "'Edit' opens ItemFormSheet in edit mode",
+        "'Delete' shows confirmation dialog",
+        "Menu uses DropdownMenu component"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode (admin), /app/catalog. Click three-dot menu on a row. All actions visible. Click 'View Details' — detail sheet opens. Close. Click menu again, 'Edit' — form sheet opens. Switch to requestor role — only 'View Details' in menu. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-08-001", "US-07-005", "US-07-006", "US-05-004"],
+      "isPassed": true,
+      "notes": "Extracted RowActionsMenu component with role-filtered actions. Admin: all 4 actions. Manager: View Details, Edit, Log Movement. Requestor: View Details only."
+    },
+    {
+      "id": "US-08-008",
+      "title": "Wire detail sheet into catalog page",
+      "description": "Update src/routes/app.catalog.tsx to manage the ItemDetailSheet state. Track selectedItemId for detail view. Table row click opens detail sheet. URL updates with ?item=ID query param so detail views are linkable/shareable. Opening the detail sheet doesn't unmount the table. Back button or sheet close removes the query param. If URL has ?item=ID on load, auto-open the detail sheet.",
+      "acceptanceCriteria": [
+        "Row click opens detail sheet with item data",
+        "URL updates to /app/catalog?item=<id>",
+        "Direct navigation to URL with ?item= opens sheet on load",
+        "Closing sheet removes ?item= from URL",
+        "Browser back button closes sheet",
+        "Table remains mounted behind sheet",
+        "Works with filter and sort state preserved"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Click a row — sheet opens, URL shows ?item=ID. Copy URL, close sheet. Paste URL — sheet opens for that item. Click browser back — sheet closes. Apply filter, click row — filter preserved behind sheet. No console errors."
+      },
+      "priority": 8,
+      "dependencies": ["US-08-001", "US-07-008"],
+      "isPassed": true,
+      "notes": "URL search param ?item=ID drives detail sheet. validateSearch on route. Back button closes sheet. Table stays mounted."
+    }
+  ]
+}

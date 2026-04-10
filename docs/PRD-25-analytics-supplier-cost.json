@@ -1,0 +1,142 @@
+{
+  "prdId": "PRD-25",
+  "feature": "Analytics — Supplier & Cost Reports",
+  "description": "A supplier and cost analytics section within /app/analytics (or as a separate tab) providing performance dashboards for supplier evaluation and cost analysis. Includes supplier scorecards with average lead time, on-time delivery rate, and order fulfillment accuracy. Cost analysis views break down spending by supplier, category, and time period. All report data is exportable as CSV. Admin and Manager roles only. Data sourced from purchase orders, movements, and item cost fields in demo store.",
+  "buildOrder": 24,
+  "dependsOnPrds": ["PRD-10", "PRD-11"],
+  "stories": [
+    {
+      "id": "US-25-001",
+      "title": "Supplier analytics tab on analytics page",
+      "description": "Add a 'Suppliers' tab to the analytics page (src/routes/app.analytics.tsx) alongside existing Stock Overview and Movement Trends sections. Tab renders a placeholder initially. Uses shadcn Tabs. Tab only visible to Admin/Manager.",
+      "acceptanceCriteria": [
+        "New 'Suppliers' tab added to analytics page",
+        "Tab switches content area to supplier analytics",
+        "Admin/Manager only visibility",
+        "Mobile: tabs scroll horizontally",
+        "Component modification under 20 lines added"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Navigate to /app/analytics. 'Suppliers' tab visible. Click it — content area switches. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-24-001"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-25-002",
+      "title": "Supplier performance scorecards",
+      "description": "Create src/components/analytics/SupplierScoreCards.tsx. For each supplier, display a card with: supplier name, total POs, avg lead time (days between PO submitted and fully received), on-time delivery rate (% of POs received by expected date), fulfillment accuracy (% of line items received at ordered qty). Cards in a responsive grid. Color-coded: green ≥90%, amber 70-89%, red <70% for rates. Data computed from PO and movement data in demo store.",
+      "acceptanceCriteria": [
+        "One card per supplier with name and 4 metrics",
+        "Avg lead time in days",
+        "On-time rate as percentage with color coding",
+        "Fulfillment accuracy as percentage with color coding",
+        "Total PO count shown",
+        "Responsive grid: 3 columns desktop, 1 column mobile",
+        "Empty state if no suppliers have POs",
+        "Component under 180 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics Suppliers tab. Supplier cards render with metrics. Rates are color-coded. Resize to 390px — single column. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-25-001", "US-10-001", "US-11-001"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-25-003",
+      "title": "Spending by supplier bar chart",
+      "description": "Create src/components/analytics/SpendBySupplierChart.tsx. Horizontal bar chart (recharts) showing total spending per supplier (sum of PO line item qty × unit cost for received POs). Sorted by spend descending. Tooltip shows exact amount. Bars use teal gradient. Clicking a bar navigates to supplier detail (/app/suppliers?supplier=ID).",
+      "acceptanceCriteria": [
+        "Horizontal bar chart with one bar per supplier",
+        "Sorted by total spend descending",
+        "Currency formatting on values",
+        "Tooltip with supplier name and exact spend",
+        "Bars clickable — navigate to supplier detail",
+        "Empty state if no PO data",
+        "Responsive width",
+        "Component under 120 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics Suppliers tab. Bar chart shows suppliers sorted by spend. Hover — tooltip with currency amount. Click a bar — navigates to supplier detail page. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-25-001", "US-02-004"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-25-004",
+      "title": "Cost by category breakdown",
+      "description": "Create src/components/analytics/CostByCategoryChart.tsx. Donut chart showing total inventory cost (qty × cost) broken down by category. Center shows total cost. Legend with category names and amounts. Tooltip with percentage and amount. Colors from a sequential teal/amber palette. Date range filter from analytics page applies.",
+      "acceptanceCriteria": [
+        "Donut chart with segments per category",
+        "Center label shows total inventory cost",
+        "Legend with category, amount, percentage",
+        "Tooltip on hover with details",
+        "Respects date range and other analytics filters",
+        "Empty state if no categorized items",
+        "Component under 100 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Navigate to /app/analytics Suppliers tab. Donut chart renders with category segments. Center shows total. Hover segments — tooltip with %. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-25-001", "US-02-004"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-25-005",
+      "title": "Cost trend over time line chart",
+      "description": "Create src/components/analytics/CostTrendChart.tsx. Line chart showing total spending over time (monthly). Single line showing cumulative or per-period spend based on PO received dates. Optional: toggle between cumulative and per-period views. X-axis: months, Y-axis: currency. Tooltip with month and amount. Uses recharts.",
+      "acceptanceCriteria": [
+        "Line chart with monthly spending data points",
+        "Toggle between cumulative and per-period views",
+        "X-axis shows months, Y-axis shows currency values",
+        "Tooltip with month name and formatted amount",
+        "Respects analytics page date range filter",
+        "Empty state if no spending data in range",
+        "Component under 130 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics Suppliers tab. Cost trend chart renders with monthly data. Toggle cumulative/per-period — chart updates. Hover points — tooltip shows amount. Change date range — chart updates. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-25-001", "US-02-004"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-25-006",
+      "title": "Export supplier reports as CSV",
+      "description": "Add 'Export Supplier Report' button to the Suppliers analytics tab. Generates a CSV with two sections: Supplier Scorecards (one row per supplier with all metrics) and Spending by Category (one row per category with cost). File named 'stackwise-supplier-report-YYYY-MM-DD.csv'. Client-side generation with browser download. Respects current filters.",
+      "acceptanceCriteria": [
+        "Export button on Suppliers tab",
+        "CSV includes supplier scorecard data and category cost data",
+        "Respects active filters and date range",
+        "File named with current date",
+        "Loading spinner during generation",
+        "Success toast on download",
+        "Empty data shows 'No data to export' toast",
+        "Utility under 60 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics Suppliers tab. Click Export — CSV downloads. Open file — contains supplier rows with metrics and category cost rows. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-25-002", "US-25-004"],
+      "isPassed": false,
+      "notes": ""
+    }
+  ]
+}

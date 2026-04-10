@@ -1,0 +1,167 @@
+{
+  "prdId": "PRD-02",
+  "feature": "Demo Mode Infrastructure",
+  "description": "Build the complete demo mode system that lets users experience Stackwise without authentication. This includes: a React context provider (DemoContext) that wraps the app and exposes an in-memory data store with full CRUD operations; a comprehensive seed data generator producing 5 categories, 35 items (mix of healthy/low/out-of-stock), 4 suppliers, 3 hierarchical locations, 70 stock movements over 30 days, 3 pending inventory requests, and 1 open purchase order with line items; a demo banner component that persists at the top of the app shell during demo sessions with a 'Create Account' CTA; and session management that resets demo data on each new visit. The demo store must implement the same data access interface that real Supabase queries will use later, so components never know whether they're in demo or real mode.",
+  "buildOrder": 2,
+  "dependsOnPrds": ["PRD-01"],
+  "stories": [
+    {
+      "id": "US-02-001",
+      "title": "Create seed data generator",
+      "description": "Create src/lib/demo-data.ts that exports a generateSeedData() function. It returns a fully populated data object with: 5 categories (Electronics, Office Supplies, Cleaning, Safety Equipment, Tools) with parent/child hierarchy; 35 items distributed across categories with realistic names, SKUs (STK-XXXX format), barcodes, unit prices, reorder thresholds — ensure ~20 are healthy stock, ~10 low stock, ~5 out of stock; 4 suppliers (Acme Supply Co, TechParts Direct, CleanPro Distributors, SafetyFirst Inc) with contact info, lead times, terms; 3 locations (Main Warehouse with zones A/B/C, each with aisles and shelves); 70 stock movements over the past 30 days with realistic timestamps and quantities; 1 open PO (draft status) with 4 line items; 3 inventory requests (1 pending, 1 approved, 1 fulfilled). All IDs should use deterministic UUIDs or simple string IDs for consistency.",
+      "acceptanceCriteria": [
+        "generateSeedData() returns object with categories, items, suppliers, locations, movements, purchaseOrders, requests",
+        "35 items with proper category/supplier/location references",
+        "Items have realistic names, SKUs in STK-XXXX format, and barcodes",
+        "~20 healthy, ~10 low, ~5 out-of-stock items",
+        "70 movements spanning 30 days with varied types (received, shipped, adjusted)",
+        "4 suppliers with complete contact info",
+        "3 locations with hierarchical children",
+        "All cross-references are valid (item.categoryId points to real category, etc.)",
+        "File uses types from src/types/inventory.ts (US-01-003)",
+        "File is under 250 lines — use helper functions and split if needed"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import generateSeedData in a temporary test. Call it and log the result. Verify: result.items.length === 35, result.suppliers.length === 4, result.locations.length === 3 (top-level), result.movements.length === 70. Spot-check that item categoryIds reference real categories. Zero TypeScript errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-01-003"],
+      "isPassed": true,
+      "notes": "Split into seed-base.ts, seed-items.ts, seed-activity.ts + index.ts barrel. 35 items (20/10/5 stock split), 4 suppliers, 3 locations, 70 movements, 1 PO, 3 requests. All cross-refs valid."
+    },
+    {
+      "id": "US-02-002",
+      "title": "Create demo store with CRUD operations",
+      "description": "Create src/lib/demo-store.ts that exports a class or set of functions implementing an in-memory data store. It initializes from generateSeedData() and provides CRUD methods: getItems(filters?), getItemById(id), createItem(data), updateItem(id, data), deleteItem(id) — and equivalent for suppliers, movements, locations, purchaseOrders, requests, categories. Also: getStockSummary() returning counts for total/inStock/low/outOfStock, getRecentMovements(limit) returning latest N movements. All mutations update the in-memory arrays. The store interface should be designed so it can be swapped with Supabase queries later.",
+      "acceptanceCriteria": [
+        "Store initializes with seed data on creation",
+        "CRUD operations for items, suppliers, movements, locations, POs, requests, categories",
+        "getItems supports filtering by category, supplier, status, location",
+        "getStockSummary returns { total, inStock, lowStock, outOfStock } counts",
+        "getRecentMovements(n) returns latest n movements sorted by timestamp desc",
+        "Creating a movement updates the referenced item's quantity",
+        "All methods return typed data matching inventory.ts interfaces",
+        "File is under 250 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import DemoStore, create instance. Call getItems() — should return 35 items. Call getStockSummary() — total should be 35. Call createItem with test data, then getItems() should return 36. Call getRecentMovements(5) — should return 5 movements sorted newest first. Zero TypeScript errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-02-001"],
+      "isPassed": true,
+      "notes": "207 lines. CRUD for all entities, filtering, stock summary, movement-quantity sync. Verified: 35 items, create→36, received movement adds stock."
+    },
+    {
+      "id": "US-02-003",
+      "title": "Create DemoContext provider",
+      "description": "Create src/contexts/DemoContext.tsx with a React context that provides: isDemo (boolean), demoStore (the in-memory store instance), enterDemoMode() to activate demo, exitDemoMode() to deactivate and clear data, resetDemoData() to regenerate fresh seed data. The provider should wrap the app in __root.tsx or the app layout. When demo mode is active, all data operations route through demoStore. When inactive, they would route to Supabase (stubbed for now). Also create src/hooks/useDemo.ts as a convenience hook that returns the context value with a helpful error if used outside provider.",
+      "acceptanceCriteria": [
+        "DemoContext provides isDemo, demoStore, enterDemoMode, exitDemoMode, resetDemoData",
+        "Provider wraps app content in RootComponent",
+        "enterDemoMode creates a fresh store with seed data",
+        "exitDemoMode clears the store and sets isDemo to false",
+        "resetDemoData regenerates seed data without exiting demo mode",
+        "useDemo hook throws descriptive error if used outside provider",
+        "Context and hook in separate files, each under 100 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open app at /. In React DevTools, find DemoProvider in component tree. Verify context value has isDemo: false initially. No console errors. Hook should be importable without TypeScript errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-02-002"],
+      "isPassed": true,
+      "notes": "DemoContext with bumpVersion, DemoProvider wraps RootComponent in __root.tsx, useDemo hook with error boundary."
+    },
+    {
+      "id": "US-02-004",
+      "title": "Create data access hook abstracting demo/real",
+      "description": "Create src/hooks/useInventoryData.ts — a hook that abstracts data access. It checks isDemo from DemoContext. If in demo mode, it reads/writes from demoStore. If not, it would use Supabase (return empty/stub for now). Export specific hooks: useItems(filters?), useItemById(id), useSuppliers(), useMovements(limit?), useStockSummary(), usePurchaseOrders(), useRequests(). Each returns { data, isLoading, error } pattern. In demo mode, isLoading is always false and data comes from demoStore. This is the ONLY way components should access data.",
+      "acceptanceCriteria": [
+        "useItems returns { data: Item[], isLoading: boolean, error: null }",
+        "useStockSummary returns { data: { total, inStock, lowStock, outOfStock }, isLoading, error }",
+        "In demo mode, data comes from demoStore immediately (isLoading: false)",
+        "In non-demo mode, returns empty arrays with isLoading: false (stub)",
+        "All hooks use types from inventory.ts",
+        "File is under 250 lines",
+        "No direct demoStore imports in any component — all through these hooks"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "In a test component, call useItems(). When demo mode is off, should return empty array. Activate demo mode, re-render — should return 35 items. Call useStockSummary() — should return valid counts. Zero console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-02-003"],
+      "isPassed": true,
+      "notes": "useInventoryData.ts with 9 query hooks, all keyed on context version for reactivity."
+    },
+    {
+      "id": "US-02-005",
+      "title": "Create DemoBanner component",
+      "description": "Create src/components/layout/DemoBanner.tsx — a slim banner that appears at the very top of the page (above the header) when isDemo is true. Amber/warm background using --amber-accent token. Text: 'You're exploring Stackwise in demo mode. Data resets each session.' with a 'Create Account' button on the right (links to sign-up page, stubbed as / for now) and a small X to dismiss for the session. Banner is 40px tall, full width, sticky at top. When dismissed, stays hidden until next demo session. On mobile, text truncates to 'Demo Mode' with the CTA still visible.",
+      "acceptanceCriteria": [
+        "Banner visible only when isDemo is true",
+        "Amber background using semantic --amber-accent token",
+        "Full message on desktop, truncated 'Demo Mode' on mobile (< 768px)",
+        "'Create Account' button styled as small white/outline button",
+        "X dismiss button hides banner for current session",
+        "Banner is sticky at top, pushes content down",
+        "40px height, centered text, 14px font",
+        "Component under 80 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Activate demo mode (navigate to /app after clicking Try Demo or manually setting demo context). Banner should appear at top with amber background and message. Click X — banner disappears. Refresh page while still in demo — banner reappears (dismiss is session-only). Resize to 390px — text shows 'Demo Mode', CTA still visible."
+      },
+      "priority": 5,
+      "dependencies": ["US-02-003", "US-01-004"],
+      "isPassed": true,
+      "notes": "Amber banner with dismiss, responsive text truncation, integrated into app.tsx layout."
+    },
+    {
+      "id": "US-02-006",
+      "title": "Wire demo mode entry from landing page",
+      "description": "Update the landing page (src/routes/index.tsx, to be built in PRD-03) or create a temporary mechanism: add a 'Try Demo' button that calls enterDemoMode() from DemoContext and navigates to /app/dashboard. For now, since the landing page isn't built yet, add a simple 'Enter Demo' button on the current placeholder index page that triggers demo mode and redirects. This is a temporary bridge until PRD-03 replaces the landing page.",
+      "acceptanceCriteria": [
+        "A visible 'Try Demo' button exists on the index page",
+        "Clicking it calls enterDemoMode() and navigates to /app/dashboard",
+        "After entering demo, DemoBanner is visible on /app/dashboard",
+        "useStockSummary and useItems return populated data",
+        "Navigating back to / and re-entering demo gives fresh data",
+        "Button uses amber accent styling per design guidelines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Open /. Click 'Try Demo' button. Should navigate to /app/dashboard. Demo banner should be visible at top. Page should have access to demo data (can verify via React DevTools or console). Navigate to / again, click 'Try Demo' again — fresh demo session starts."
+      },
+      "priority": 6,
+      "dependencies": ["US-02-005", "US-01-005"],
+      "isPassed": true,
+      "notes": "Temp landing page with Try Demo button, navigates to /app/dashboard. PRD-03 will replace."
+    },
+    {
+      "id": "US-02-007",
+      "title": "Create mutation hooks for demo store",
+      "description": "Extend src/hooks/useInventoryData.ts (or create src/hooks/useInventoryMutations.ts if the file is getting long) with mutation hooks: useCreateItem(), useUpdateItem(), useDeleteItem(), useCreateMovement(), useCreatePurchaseOrder(), useUpdatePurchaseOrder(), useCreateRequest(), useUpdateRequest(). Each returns a mutate function and { isLoading, error } state. In demo mode, mutations update the demoStore and trigger re-renders. In non-demo mode, they're stubs. Mutations should use the callback pattern: mutate(data, { onSuccess, onError }).",
+      "acceptanceCriteria": [
+        "useCreateItem returns { mutate, isLoading, error }",
+        "mutate(itemData) adds item to demoStore and triggers re-render",
+        "useCreateMovement creates a movement AND updates item quantity",
+        "All mutation hooks follow same { mutate, isLoading, error } pattern",
+        "onSuccess and onError callbacks supported",
+        "Re-renders propagate to any component using the related query hook",
+        "File(s) under 250 lines each"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Call useItems — count is 35. Use useCreateItem to add a new item. Call useItems again — count is 36. Use useCreateMovement to add a 'received' movement for an existing item — item's quantity should increase. Verify via console or temporary UI. Zero errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "useInventoryMutations.ts with 8 mutation hooks using bumpVersion for reactivity."
+    }
+  ]
+}

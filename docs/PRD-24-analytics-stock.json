@@ -1,0 +1,191 @@
+{
+  "prdId": "PRD-24",
+  "feature": "Analytics — Stock & Movement Reports",
+  "description": "A dedicated analytics page at /app/analytics providing visual stock and movement reporting for Admin and Manager roles. Includes inventory value summary, stock counts by status, category breakdown charts (bar/pie), movement trend lines (received vs shipped vs adjusted over time), turnover rate calculations, and reorder frequency analysis. All charts filterable by date range, category, supplier, and location. Uses recharts for visualization. Data sourced from demo store hooks. The page is organized into collapsible report sections.",
+  "buildOrder": 23,
+  "dependsOnPrds": ["PRD-09", "PRD-07"],
+  "stories": [
+    {
+      "id": "US-24-001",
+      "title": "Analytics page layout and route",
+      "description": "Create src/routes/app.analytics.tsx at /app/analytics. Page header 'Analytics' with date range picker (preset: Last 30 days, Last 90 days, This Year, Custom). Admin/Manager only route guard. Layout has two sections: 'Stock Overview' and 'Movement Trends', each as collapsible card sections. Add Analytics to sidebar nav under a 'Reports' group (admin/manager only). Mobile: single column stacked.",
+      "acceptanceCriteria": [
+        "Route /app/analytics renders with 'Analytics' heading",
+        "Admin/Manager only — Requestor redirected with toast",
+        "Date range picker with presets and custom range option",
+        "Two collapsible sections: Stock Overview, Movement Trends",
+        "Sidebar nav item under 'Reports' group, admin/manager only",
+        "Active state on sidebar when on analytics page",
+        "Mobile: stacked layout at 390px",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, navigate to /app/analytics. Page renders with heading and date picker. Two sections visible. Switch demo role to Requestor — redirected to dashboard. Resize to 390px — stacked layout. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-05-003", "US-05-002"],
+      "isPassed": true,
+      "notes": "Analytics page with collapsible sections, date range picker, admin/manager route guard."
+    },
+    {
+      "id": "US-24-002",
+      "title": "Stock summary metric cards",
+      "description": "Create src/components/analytics/StockSummaryCards.tsx. Four metric cards in a responsive grid: Total Inventory Value (sum of qty × cost), Total SKUs, Average Stock Level, Items Below Reorder Point. Each card shows value, label, and a small trend indicator (up/down arrow vs previous period). Uses MetricCard from PRD-06. Values computed from useItems() filtered by selected date range.",
+      "acceptanceCriteria": [
+        "4 metric cards: Total Value, Total SKUs, Avg Stock Level, Below Reorder",
+        "Values computed from demo store items",
+        "Currency formatting for Total Value",
+        "Trend indicators comparing to previous equivalent period",
+        "Responsive: 2×2 grid desktop, stacked mobile",
+        "Loading state with skeleton cards",
+        "Component under 120 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Navigate to /app/analytics. Four metric cards render with computed values. Total Value shows currency format. Below Reorder count matches items where qty < reorder_point. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-24-001", "US-06-001"],
+      "isPassed": true,
+      "notes": "4 metric cards: Total Value (currency), Total SKUs, Avg Stock, Below Reorder."
+    },
+    {
+      "id": "US-24-003",
+      "title": "Stock by category bar chart",
+      "description": "Create src/components/analytics/StockByCategoryChart.tsx. Horizontal bar chart using recharts showing item count per category. Bars colored with the teal palette. Tooltip on hover showing exact count. If no categories, show empty state. Responsive: chart height scales with category count (min 200px). Clicking a bar could filter the catalog (link to /app/catalog?category=X).",
+      "acceptanceCriteria": [
+        "Horizontal bar chart with one bar per category",
+        "Bars use teal color palette from design system",
+        "Tooltip on hover with category name and count",
+        "Chart height scales with number of categories",
+        "Empty state if no categories exist",
+        "Bars clickable — navigate to catalog filtered by category",
+        "Responsive width on mobile",
+        "Component under 120 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics. Bar chart shows categories with item counts. Hover a bar — tooltip with count. Click a bar — navigates to /app/catalog with category filter applied. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-24-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "Horizontal bar chart with recharts, clickable bars navigate to catalog with category filter."
+    },
+    {
+      "id": "US-24-004",
+      "title": "Stock status pie chart",
+      "description": "Create src/components/analytics/StockStatusChart.tsx. Pie/donut chart using recharts showing distribution: In Stock (green), Low Stock (amber), Out of Stock (red). Center label shows total items. Legend below chart. Tooltip shows count and percentage. Uses stock status colors from design guidelines.",
+      "acceptanceCriteria": [
+        "Donut chart with three segments: In Stock, Low Stock, Out of Stock",
+        "Colors match design system: green, amber, red",
+        "Center label shows total item count",
+        "Legend below chart with color swatches",
+        "Tooltip on hover with count and percentage",
+        "Empty state if no items",
+        "Component under 100 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Navigate to /app/analytics. Donut chart renders with three colored segments. Hover segments — tooltip shows count and %. Center shows total. Legend matches segments. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-24-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "Donut chart with green/amber/red segments, center total label, legend and tooltips."
+    },
+    {
+      "id": "US-24-005",
+      "title": "Movement trends line chart",
+      "description": "Create src/components/analytics/MovementTrendsChart.tsx. Line chart using recharts showing movement counts over time grouped by type (received, shipped, adjusted, transferred). X-axis: date (daily or weekly depending on range). Y-axis: count. Each type is a separate colored line. Toggle lines on/off via legend clicks. Date range from page filter applies. Uses useMovements() hook filtered by date range.",
+      "acceptanceCriteria": [
+        "Line chart with 4 lines: received, shipped, adjusted, transferred",
+        "Each line distinct color from design palette",
+        "X-axis shows dates, Y-axis shows counts",
+        "Grouping: daily for ≤30 days, weekly for >30 days",
+        "Click legend to toggle line visibility",
+        "Tooltip on hover shows date and count per type",
+        "Date range filter from page applies",
+        "Empty state if no movements in range",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics. Movement Trends section shows line chart with colored lines. Hover a point — tooltip with counts. Click a legend item — that line toggles off. Change date range — chart updates. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-24-001", "US-09-001"],
+      "isPassed": true,
+      "notes": "Line chart with 4 movement type lines, daily/weekly grouping, legend toggle."
+    },
+    {
+      "id": "US-24-006",
+      "title": "Turnover rate and reorder analysis",
+      "description": "Create src/components/analytics/TurnoverAnalysis.tsx. A card showing: top 10 fastest-moving items (by total outbound movements / avg stock), top 10 slowest-moving items, and items that triggered reorder most frequently. Each list shows item name, SKU, and the metric value. Clickable rows link to item detail (/app/catalog?item=ID). Computed from movement history and item data.",
+      "acceptanceCriteria": [
+        "Three lists: Fastest Moving, Slowest Moving, Most Reordered",
+        "Each list shows top 10 items with name, SKU (mono), metric value",
+        "Fastest = total outbound / avg stock (higher = faster)",
+        "Slowest = items with lowest turnover or zero movements",
+        "Most Reordered = items with most 'received' movements",
+        "Rows clickable — navigate to catalog item detail",
+        "Empty states per list if insufficient data",
+        "Component under 180 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics. Turnover section shows three ranked lists. Items have SKUs in monospace. Click an item — navigates to /app/catalog?item=ID. Lists are ordered by metric value. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-24-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "Three ranked lists: fastest/slowest moving, most reordered. Clickable rows to catalog."
+    },
+    {
+      "id": "US-24-007",
+      "title": "Analytics filter integration",
+      "description": "Create src/components/analytics/AnalyticsFilters.tsx. Filter bar below the date picker with dropdowns: Category, Supplier, Location. Filters apply to all charts and metrics on the page simultaneously. Active filter count shown as badge. Clear all button. Filters persist during session via URL search params. Mobile: filters collapse into a sheet.",
+      "acceptanceCriteria": [
+        "Filter dropdowns: Category, Supplier, Location",
+        "Filters apply to all charts and metrics on page",
+        "Active filter count badge on filter bar",
+        "Clear all button resets all filters",
+        "Filters stored in URL search params",
+        "Mobile: filters in collapsible sheet triggered by filter icon",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics. Select a category filter — all charts update to show only that category's data. Active count badge shows '1'. Add supplier filter — badge shows '2'. Click Clear All — filters reset, charts show all data. Resize to 390px — filters in sheet. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-24-002", "US-24-003", "US-24-005"],
+      "isPassed": true,
+      "notes": "Filter bar with category/supplier/location dropdowns, active count badge, clear all."
+    },
+    {
+      "id": "US-24-008",
+      "title": "Export analytics as CSV",
+      "description": "Add an 'Export CSV' button to the analytics page header. Exports the currently filtered data as a CSV file with sections: Stock Summary (one row per item with qty, value, status), Movement Summary (one row per movement in range). File named 'stackwise-analytics-YYYY-MM-DD.csv'. Uses client-side CSV generation and browser download. Button shows loading spinner during generation.",
+      "acceptanceCriteria": [
+        "Export CSV button in page header",
+        "CSV includes stock summary and movement data",
+        "Respects current date range and filters",
+        "File named with current date",
+        "Loading spinner during CSV generation",
+        "Success toast after download triggers",
+        "Empty data shows toast 'No data to export'",
+        "Component/utility under 80 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/analytics. Click Export CSV — file downloads with date in filename. Open CSV — contains stock and movement rows. Apply a filter, export again — CSV reflects filtered data. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-24-007"],
+      "isPassed": true,
+      "notes": "Client-side CSV export with stock and movement sections, date-stamped filename."
+    }
+  ]
+}

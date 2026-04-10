@@ -1,0 +1,147 @@
+{
+  "prdId": "PRD-27",
+  "feature": "Mobile Responsiveness",
+  "description": "Systematic mobile responsiveness pass across all Stackwise pages, ensuring every view is fully usable at 390px viewport width. Includes collapsible sidebar to hamburger menu, responsive data tables that switch to card layout on small screens, touch-friendly action buttons with minimum 44px tap targets, a bottom navigation bar on mobile for primary sections, and page-by-page testing at 390px. This PRD treats mobile as a first-class experience, not an afterthought.",
+  "buildOrder": 26,
+  "dependsOnPrds": ["PRD-01"],
+  "stories": [
+    {
+      "id": "US-27-001",
+      "title": "Mobile sidebar as hamburger menu",
+      "description": "Update the app layout sidebar (from US-01-004/US-01-006) to fully collapse on screens < 768px. Replace with a hamburger icon button in the header (top-left). Tapping opens the sidebar as a full-height overlay from the left with backdrop. Close on backdrop tap, close button, or navigation. Sidebar overlay uses framer-motion slide animation. Ensure sidebar z-index is above all content.",
+      "acceptanceCriteria": [
+        "Sidebar hidden on < 768px, hamburger icon shown in header",
+        "Hamburger opens sidebar as left-sliding overlay",
+        "Backdrop overlay dims content behind sidebar",
+        "Close on: backdrop tap, X button, or selecting a nav item",
+        "Slide animation with framer-motion (200ms ease)",
+        "Z-index above all page content and sheets",
+        "Hamburger icon is 44px minimum tap target",
+        "Desktop: sidebar remains fixed as before"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Resize to 390px. Sidebar hidden, hamburger visible. Tap hamburger — sidebar slides in with backdrop. Tap a nav item — sidebar closes, page navigates. Tap backdrop — sidebar closes. Resize to desktop — sidebar returns to fixed position. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-01-004", "US-01-006"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-27-002",
+      "title": "Responsive data table to card view",
+      "description": "Create src/components/shared/ResponsiveTable.tsx — a wrapper that renders a standard shadcn Table on desktop (≥768px) and switches to a stacked card layout on mobile (<768px). Each card shows key fields as label-value pairs with the primary field (name/title) as card header. Cards are tappable (same as row click). Pagination remains at bottom. Apply to CatalogTable, MovementsTable, SuppliersTable, PurchaseOrdersTable, and UserManagement table.",
+      "acceptanceCriteria": [
+        "Desktop ≥768px: standard table layout unchanged",
+        "Mobile <768px: cards with label-value pairs stacked vertically",
+        "Card header shows primary field (item name, PO number, etc.)",
+        "Cards tappable — trigger same action as row click",
+        "Pagination controls work in both layouts",
+        "Card layout shows max 5 key fields (not all columns)",
+        "Applied to all 5 main data tables",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/catalog at 390px. Items shown as cards, not table rows. Each card has name as header, key fields as label-value. Tap a card — detail sheet opens. Pagination works. Resize to desktop — table layout returns. Check /app/movements, /app/suppliers, /app/purchase-orders — all use card layout on mobile. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-07-001", "US-09-001", "US-10-001", "US-11-001"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-27-003",
+      "title": "Mobile bottom navigation bar",
+      "description": "Create src/components/layout/BottomNav.tsx — a fixed bottom navigation bar visible only on <768px. Shows 5 icons: Dashboard (LayoutDashboard), Catalog (Package), Movements (ArrowUpDown), Orders (ClipboardList), More (MoreHorizontal). 'More' opens a sheet with remaining nav items (Suppliers, Analytics, Settings, etc.). Active item highlighted with teal. Bar has white background, top border, and is 56px tall. Hidden on desktop.",
+      "acceptanceCriteria": [
+        "Fixed bottom bar, 56px tall, visible only < 768px",
+        "5 icons: Dashboard, Catalog, Movements, Orders, More",
+        "Active route icon highlighted with teal color",
+        "Tapping navigates to corresponding route",
+        "'More' opens bottom sheet with remaining nav items",
+        "All icons have labels below them",
+        "44px minimum tap targets for all icons",
+        "Hidden on desktop (≥768px)",
+        "Component under 120 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Resize to 390px. Bottom nav appears with 5 icons. Tap Dashboard — navigates, icon highlighted. Tap Catalog — navigates. Tap More — sheet with additional items. Tap Suppliers in sheet — navigates. Resize to desktop — bottom nav hidden. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-01-004"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-27-004",
+      "title": "Touch-friendly action buttons and forms",
+      "description": "Audit all interactive elements across the app for mobile usability. Ensure: all buttons have minimum 44px height on mobile, form inputs have 44px minimum height, dropdown menus have adequate spacing between items (36px min per item), action menus (three-dot) have 44px tap targets, dialog/sheet close buttons are easily tappable. Add padding adjustments via Tailwind responsive classes where needed.",
+      "acceptanceCriteria": [
+        "All buttons ≥ 44px height on mobile",
+        "All form inputs ≥ 44px height on mobile",
+        "Dropdown menu items ≥ 36px height",
+        "Three-dot action menus ≥ 44px tap target",
+        "Dialog close buttons easily tappable",
+        "No overlapping tap targets",
+        "Sheet handles have visible drag indicator on mobile",
+        "Applied across all pages"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "At 390px, navigate to catalog. Open new item form — all inputs at least 44px tall. Open action dropdown on an item — menu items have adequate spacing. Open a dialog — close button easily tappable. Check movements form, PO form, supplier form — all inputs properly sized. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-27-002"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-27-005",
+      "title": "Mobile filter sheets",
+      "description": "Ensure all filter bars (catalog, movements, POs, analytics) collapse into a single 'Filters' button on mobile (<768px) that opens a bottom sheet with all filter options stacked vertically. Active filter count shown as badge on the button. Clear all button inside the sheet. Apply button closes sheet and applies filters. This may already be partially implemented — verify and complete for all filter components.",
+      "acceptanceCriteria": [
+        "Filter bars collapse to single 'Filters' button on mobile",
+        "Button shows active filter count badge",
+        "Bottom sheet with all filter options stacked vertically",
+        "Apply button closes sheet and applies filters",
+        "Clear all button inside sheet",
+        "Applied to: CatalogFilters, MovementsFilters, PurchaseOrdersFilters, AnalyticsFilters",
+        "Desktop: filter bars remain inline as before"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "At 390px, navigate to /app/catalog. Filter bar shows single 'Filters' button. Tap — bottom sheet opens with all filter options. Select a category, tap Apply — sheet closes, filter active, badge shows '1'. Tap Filters again, Clear All — filters reset. Check /app/movements and /app/purchase-orders — same pattern. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-07-002", "US-09-002", "US-11-002"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-27-006",
+      "title": "Mobile page-by-page QA and fixes",
+      "description": "Systematic QA pass at 390px viewport for every page: landing, login, signup, forgot-password, dashboard, catalog, movements, suppliers, purchase-orders, analytics, settings, insights. Fix any overflow issues, text truncation problems, misaligned elements, or unusable interactions. Ensure no horizontal scroll on any page (except data tables which scroll within their container). All modals/sheets properly sized.",
+      "acceptanceCriteria": [
+        "No unwanted horizontal scroll on any page at 390px",
+        "All text properly truncated or wrapped — no overflow",
+        "All modals/sheets fit within viewport",
+        "Side-sheets become full-width on mobile",
+        "Dashboard metric cards stack 2×2 or 1 column",
+        "Landing page fully responsive with stacked layout",
+        "Auth pages centered and properly sized",
+        "No element extends beyond viewport edges"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "At 390px, visit every page in sequence: /, /login, /signup, /app/dashboard, /app/catalog, /app/movements, /app/suppliers, /app/purchase-orders, /app/analytics, /app/settings. On each: no horizontal scroll, no overflow, all content readable, all actions accessible. Open a side-sheet — full width on mobile. No console errors on any page."
+      },
+      "priority": 6,
+      "dependencies": ["US-27-001", "US-27-002", "US-27-003", "US-27-004", "US-27-005"],
+      "isPassed": false,
+      "notes": ""
+    }
+  ]
+}

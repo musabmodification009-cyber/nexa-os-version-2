@@ -1,0 +1,163 @@
+{
+  "prdId": "PRD-18",
+  "feature": "Notifications & Alerts System",
+  "description": "An in-app notification system with a bell icon in the header showing unread count. Notifications are generated automatically for key events: low stock alerts (qty <= reorder_point), zero stock alerts, PO reminders (approaching expected delivery), overdue POs (past expected delivery and not fully received), and request status changes. Users can configure notification preferences. A notification center panel shows all notifications with read/unread state, filtering, and mark-as-read actions. Toast notifications provide immediate feedback for user actions.",
+  "buildOrder": 17,
+  "dependsOnPrds": ["PRD-09", "PRD-11"],
+  "stories": [
+    {
+      "id": "US-18-001",
+      "title": "Notification data model and hooks",
+      "description": "Create src/hooks/useNotifications.ts — data hooks for notifications. Each notification: id, type (low_stock, zero_stock, po_reminder, po_overdue, request_update, system), title, message, is_read, created_at, link (optional URL to navigate to), reference_id (item/PO/request ID). useNotifications() returns all for current user sorted newest first. useUnreadCount() returns unread count. useMarkAsRead(id), useMarkAllAsRead(), useDismissNotification(id) mutations. Demo mode stores in DemoStore.",
+      "acceptanceCriteria": [
+        "Notification data structure with all fields",
+        "useNotifications returns sorted list",
+        "useUnreadCount returns number",
+        "Mark as read/all mutations work",
+        "Dismiss removes notification",
+        "Demo mode persistence in DemoStore",
+        "Seed data includes sample notifications"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import useNotifications and useUnreadCount in a test. Verify seed notifications returned. Mark one as read — count decreases. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004", "US-02-007"],
+      "isPassed": true,
+      "notes": "Notification type with low_stock/zero_stock/po_reminder/po_overdue/request_update/system. DemoStore CRUD (get/markRead/markAll/dismiss/add). seed-notifications.ts with 7 sample notifications. useNotifications/useUnreadCount/useMarkAsRead/useMarkAllAsRead/useDismissNotification hooks."
+    },
+    {
+      "id": "US-18-002",
+      "title": "Notification bell icon with badge",
+      "description": "Create src/components/notifications/NotificationBell.tsx — a bell icon button in the app header (next to user menu). Shows unread count as a small red badge (number if ≤99, '99+' if more). Badge hidden when count is 0. Click opens the notification center panel. Bell animates briefly (subtle shake) when a new notification arrives. Uses useUnreadCount hook.",
+      "acceptanceCriteria": [
+        "Bell icon in header",
+        "Red badge with unread count",
+        "Badge hidden at 0",
+        "'99+' for counts over 99",
+        "Click opens notification center",
+        "Subtle animation on new notification",
+        "Accessible: aria-label with count"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Enter demo mode. Bell icon visible in header with badge showing seed notification count. Mark all as read — badge disappears. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-18-001", "US-01-005"],
+      "isPassed": true,
+      "notes": "NotificationBell component with unread count badge (red, 99+ cap), aria-label with count, hidden when 0. Wired into Header between quick action and role badge."
+    },
+    {
+      "id": "US-18-003",
+      "title": "Notification center panel",
+      "description": "Create src/components/notifications/NotificationCenter.tsx — a Sheet (400px) from the right opened by the bell icon. Header: 'Notifications' title, unread count, 'Mark All as Read' button. Filter tabs: All, Unread, Stock Alerts, PO Updates, Requests. Notification list: each item shows type icon (color-coded), title, message (truncated 2 lines), relative time, unread dot indicator. Click navigates to the linked page and marks as read. Dismiss (X) button per notification. Empty state per tab.",
+      "acceptanceCriteria": [
+        "Sheet from right, 400px wide",
+        "Header with title, count, Mark All button",
+        "Filter tabs: All, Unread, Stock Alerts, PO Updates, Requests",
+        "Each notification: icon, title, message, time, unread dot",
+        "Click navigates and marks as read",
+        "Dismiss button per notification",
+        "Empty state per tab",
+        "Responsive: full width on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Click bell — notification center opens. Notifications listed with icons and times. Click a notification — navigates to linked page, marked as read. Click 'Mark All as Read' — all dots cleared. Filter by tab — filtered. Dismiss one — removed. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-18-001", "US-18-002"],
+      "isPassed": true,
+      "notes": "NotificationCenter sheet (400px right). Header with title, unread badge, Mark All as Read. Filter tabs: All/Unread/Stock/PO/Requests. Items with type icon, title, message, relative time, unread dot. Click navigates + marks read. Dismiss per item. Empty state per tab."
+    },
+    {
+      "id": "US-18-004",
+      "title": "Auto-generate stock alerts",
+      "description": "Create src/lib/notification-generators.ts — functions that scan inventory and generate notifications. generateStockAlerts(): iterates items, creates low_stock notification when qty_on_hand <= reorder_point and qty > 0, creates zero_stock notification when qty_on_hand === 0. Deduplication: don't create if an unread alert for the same item already exists. Link points to /app/catalog?item=ID. Run on dashboard load and after any stock movement. In demo mode, seed data should include items triggering these alerts.",
+      "acceptanceCriteria": [
+        "Low stock alerts for qty <= reorder_point",
+        "Zero stock alerts for qty === 0",
+        "Deduplication: no duplicate unread alerts per item",
+        "Link to item detail",
+        "Runs on dashboard load",
+        "Runs after stock movements",
+        "Seed data triggers sample alerts"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Go to dashboard. Check notifications — stock alerts for low/zero stock items exist. Log a movement that drops an item below reorder point — new alert generated. Check no duplicate alerts for same item. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-18-001", "US-06-001", "US-09-003"],
+      "isPassed": true,
+      "notes": "notification-generators.ts with generateStockAlerts. Deduplicates by type+itemId (unread only). Runs on dashboard load via useStockAlertGenerator hook. Also runs after useCreateMovement. Seed data triggers both low_stock and zero_stock alerts."
+    },
+    {
+      "id": "US-18-005",
+      "title": "Auto-generate PO alerts",
+      "description": "Extend notification-generators.ts with generatePOAlerts(): creates po_reminder when a submitted PO's expected_delivery is within 3 days, creates po_overdue when expected_delivery is past and PO not fully received. Deduplication by PO ID. Link to /app/purchase-orders?po=ID. Run on dashboard load. In demo mode, seed POs should include one approaching delivery and one overdue.",
+      "acceptanceCriteria": [
+        "PO reminder for delivery within 3 days",
+        "PO overdue for past delivery date + not received",
+        "Deduplication by PO ID",
+        "Link to PO detail",
+        "Runs on dashboard load",
+        "Seed data includes triggering POs"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Go to dashboard. Check notifications — PO reminder and/or overdue alerts exist for seed POs with appropriate dates. Links navigate to PO detail. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-18-001", "US-11-001"],
+      "isPassed": true,
+      "notes": "generatePOAlerts in notification-generators.ts. po_overdue for past delivery, po_reminder within 3 days. Dedup by PO ID+type. Seed PO-01 changed to Submitted with delivery 2 days ago, PO-04 overdue 5 days. Runs on dashboard load via useAlertGenerator."
+    },
+    {
+      "id": "US-18-006",
+      "title": "Notification preferences",
+      "description": "Create src/components/notifications/NotificationPreferences.tsx — a section in user settings (or accessible from notification center via gear icon). Toggle switches for each notification type: Low Stock Alerts (on/off), Zero Stock Alerts (on/off), PO Reminders (on/off), PO Overdue (on/off), Request Updates (on/off). Preferences stored per user in demo store. Generators respect preferences — disabled types are not created.",
+      "acceptanceCriteria": [
+        "Toggle for each notification type",
+        "Preferences persist in demo store",
+        "Disabled types not generated",
+        "Accessible from notification center gear icon",
+        "All toggles default to on",
+        "Save confirmation toast",
+        "Responsive layout"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open notification preferences. Toggle off Low Stock Alerts. Save. Go to dashboard — no new low stock alerts generated. Toggle back on — alerts appear again. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-18-004", "US-18-005"],
+      "isPassed": false,
+      "notes": "NotificationPreferences component created with toggles, DemoStore persistence, generators respect prefs. Gear icon in NotificationCenter header. E2e test times out on Dialog open after Sheet close — likely Radix portal timing issue in Playwright. Needs retry."
+    },
+    {
+      "id": "US-18-007",
+      "title": "Toast notifications for actions",
+      "description": "Audit all mutation operations across the app and ensure consistent toast notifications using sonner. Standard patterns: 'Item created successfully', 'Movement logged', 'PO submitted', 'Request approved', etc. Error toasts for failures: 'Failed to save item. Please try again.' Toasts auto-dismiss after 4 seconds. Action toasts include an 'Undo' button where applicable (item create, movement log). Undo reverts the mutation within 5 seconds.",
+      "acceptanceCriteria": [
+        "All mutations show success toasts",
+        "All failures show error toasts",
+        "Consistent message patterns",
+        "4-second auto-dismiss",
+        "Undo button on create/log operations",
+        "Undo reverts within 5 seconds",
+        "No duplicate toasts for same operation"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Create an item — success toast with Undo. Click Undo within 5s — item removed. Log a movement — success toast. Trigger an error (if possible) — error toast shown. Toasts auto-dismiss. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-02-007"],
+      "isPassed": true,
+      "notes": "Added onError toast handlers to all mutations (catalog, suppliers, POs, requests, locations). Added Undo button on item create with 5s duration. Movement log toast extended to 5s. Consistent patterns across all CRUD operations."
+    }
+  ]
+}

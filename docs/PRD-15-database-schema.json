@@ -1,0 +1,264 @@
+{
+  "prdId": "PRD-15",
+  "feature": "Database Schema & RLS Policies",
+  "description": "Define the complete Supabase database schema for Stackwise. This includes all tables (categories, items, suppliers, locations, stock_movements, purchase_orders, purchase_order_items, inventory_requests, request_items, custom_field_definitions, user_roles, notifications, profiles), their relationships via foreign keys, appropriate indexes for query performance, and comprehensive Row-Level Security policies. Since we're mocking for demo mode first, this PRD creates the migration SQL files and documents the schema — actual Supabase enablement happens when Cloud is connected. The schema must support the three-role access model (Admin, Manager, Requestor) with a security definer function for role checks.",
+  "buildOrder": 4,
+  "dependsOnPrds": ["PRD-04"],
+  "stories": [
+    {
+      "id": "US-15-001",
+      "title": "Create profiles and user_roles tables migration",
+      "description": "Create a Supabase migration file for the profiles table (id uuid PK referencing auth.users, full_name text, avatar_url text, created_at, updated_at) and user_roles table (id uuid PK, user_id uuid referencing auth.users ON DELETE CASCADE, role app_role enum NOT NULL, unique on user_id+role). Create the app_role enum type (admin, manager, requestor). Add trigger to auto-create profile on auth.users insert. Add has_role security definer function. Enable RLS on both tables.",
+      "acceptanceCriteria": [
+        "Migration SQL creates app_role enum with admin, manager, requestor",
+        "profiles table with id, full_name, avatar_url, created_at, updated_at",
+        "profiles.id references auth.users(id) ON DELETE CASCADE",
+        "user_roles table with id, user_id, role, unique(user_id, role)",
+        "Trigger function creates profile row on auth.users insert",
+        "has_role(uuid, app_role) security definer function created",
+        "RLS enabled on both tables",
+        "RLS policy: users can read own profile, admins can read all",
+        "RLS policy: users can update own profile",
+        "RLS policy on user_roles: readable by authenticated, writable by admins only"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review migration SQL for correctness. Verify: enum created, both tables have proper columns and constraints, trigger function exists, has_role function is SECURITY DEFINER with search_path set, RLS policies cover read/write for each role. SQL should be valid PostgreSQL."
+      },
+      "priority": 1,
+      "dependencies": [],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00001. Includes app_role enum, profiles with auto-create trigger, user_roles with unique constraint, has_role SECURITY DEFINER, RLS on both tables. Also includes reusable update_updated_at_column trigger function."
+    },
+    {
+      "id": "US-15-002",
+      "title": "Create categories table migration",
+      "description": "Migration for categories table: id uuid PK default gen_random_uuid(), name text NOT NULL, parent_id uuid nullable self-referencing FK (for hierarchy), description text, created_at timestamptz default now(). Enable RLS. Policies: all authenticated users can read, admins can insert/update/delete. Index on parent_id for hierarchy queries.",
+      "acceptanceCriteria": [
+        "categories table with id, name, parent_id, description, created_at",
+        "parent_id self-references categories(id) ON DELETE SET NULL",
+        "RLS enabled with read for authenticated, write for admins",
+        "Index on parent_id",
+        "Valid PostgreSQL syntax"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify self-referencing FK, RLS policies use has_role function for admin checks, index exists on parent_id."
+      },
+      "priority": 2,
+      "dependencies": ["US-15-001"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00002. Self-ref FK with ON DELETE SET NULL, index on parent_id, RLS with has_role for admin write access."
+    },
+    {
+      "id": "US-15-003",
+      "title": "Create suppliers table migration",
+      "description": "Migration for suppliers table: id uuid PK, name text NOT NULL, contact_person text, email text, phone text, address text, notes text, payment_terms text, lead_time_days integer, min_order_qty integer, created_at, updated_at. RLS: authenticated can read, admin and manager can write. Index on name.",
+      "acceptanceCriteria": [
+        "suppliers table with all specified columns",
+        "RLS: read for authenticated, insert/update/delete for admin + manager",
+        "Index on name for search",
+        "updated_at auto-updates via trigger or default",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify all columns, RLS uses has_role for admin and manager, index on name exists."
+      },
+      "priority": 3,
+      "dependencies": ["US-15-001"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00003. All columns, updated_at trigger, index on name, RLS with has_role for admin+manager write."
+    },
+    {
+      "id": "US-15-004",
+      "title": "Create locations table migration",
+      "description": "Migration for locations table: id uuid PK, name text NOT NULL, parent_id uuid nullable self-referencing FK (warehouse > zone > aisle > shelf > bin hierarchy), description text, created_at. RLS: all authenticated can read, admins can write. Index on parent_id.",
+      "acceptanceCriteria": [
+        "locations table with id, name, parent_id, description, created_at",
+        "Self-referencing FK on parent_id",
+        "RLS: read all authenticated, write admin only",
+        "Index on parent_id",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL for self-referencing FK, RLS policies, and index."
+      },
+      "priority": 4,
+      "dependencies": ["US-15-001"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00004. Self-ref FK ON DELETE SET NULL, index on parent_id, RLS admin-only write."
+    },
+    {
+      "id": "US-15-005",
+      "title": "Create items table migration",
+      "description": "Migration for items table: id uuid PK, name text NOT NULL, description text, image_url text, sku text UNIQUE NOT NULL, barcode text, category_id uuid FK references categories, tags text[] (array), unit_of_measure text default 'each', quantity_on_hand integer default 0, reorder_threshold integer default 10, reorder_quantity integer default 20, preferred_supplier_id uuid FK references suppliers, cost_per_unit numeric(10,2), sale_price numeric(10,2), location_id uuid FK references locations, status text default 'active' CHECK (status IN ('active','discontinued','archived')), custom_fields jsonb default '{}', created_at, updated_at. RLS: all authenticated can read, admin + manager can write. Indexes on sku, barcode, category_id, supplier_id, location_id, status.",
+      "acceptanceCriteria": [
+        "items table with all specified columns and correct types",
+        "SKU is unique and not null",
+        "Foreign keys to categories, suppliers, locations",
+        "status CHECK constraint for valid values",
+        "custom_fields as JSONB with empty object default",
+        "tags as text array",
+        "RLS: read authenticated, write admin + manager",
+        "Indexes on sku, barcode, category_id, preferred_supplier_id, location_id, status",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify all columns with correct types, UNIQUE on sku, CHECK on status, all FKs, all indexes, RLS policies."
+      },
+      "priority": 5,
+      "dependencies": ["US-15-002", "US-15-003", "US-15-004"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00005. All columns, UNIQUE sku, CHECK status, FKs, tags text[], custom_fields jsonb, 6 indexes, updated_at trigger, RLS admin+manager write."
+    },
+    {
+      "id": "US-15-006",
+      "title": "Create stock_movements table migration",
+      "description": "Migration for stock_movements table: id uuid PK, item_id uuid FK references items NOT NULL, quantity integer NOT NULL, direction text CHECK (IN ('in','out')), movement_type text CHECK (IN ('received','shipped','adjusted','transferred')), reference_note text, performed_by uuid FK references auth.users, from_location_id uuid FK references locations, to_location_id uuid FK references locations, resulting_quantity integer NOT NULL, created_at timestamptz default now(). RLS: all authenticated can read, admin + manager can insert. No updates or deletes (audit trail is immutable). Indexes on item_id, created_at, movement_type, performed_by.",
+      "acceptanceCriteria": [
+        "stock_movements table with all columns",
+        "CHECK constraints on direction and movement_type",
+        "FK to items, auth.users, locations (from/to)",
+        "RLS: read authenticated, INSERT only for admin + manager, no UPDATE/DELETE",
+        "Indexes on item_id, created_at, movement_type",
+        "resulting_quantity tracks the item quantity after this movement",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify immutability (no UPDATE/DELETE policies), CHECK constraints, all FKs, indexes. Confirm only INSERT allowed for admin+manager."
+      },
+      "priority": 6,
+      "dependencies": ["US-15-005"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00006. CHECK on direction and movement_type, FKs, immutable (no UPDATE/DELETE), 4 indexes, resulting_quantity column."
+    },
+    {
+      "id": "US-15-007",
+      "title": "Create purchase_orders and line items tables migration",
+      "description": "Migration for purchase_orders: id uuid PK, supplier_id uuid FK references suppliers NOT NULL, status text CHECK (IN ('draft','submitted','partial','received','cancelled')) default 'draft', expected_delivery_date date, notes text, created_by uuid FK references auth.users, created_at, updated_at. And purchase_order_items: id uuid PK, purchase_order_id uuid FK references purchase_orders ON DELETE CASCADE, item_id uuid FK references items, quantity_ordered integer NOT NULL, quantity_received integer default 0, unit_cost numeric(10,2). RLS on both: read authenticated, write admin + manager. Indexes on supplier_id, status, created_by for POs; on purchase_order_id, item_id for line items.",
+      "acceptanceCriteria": [
+        "purchase_orders table with all columns and status CHECK",
+        "purchase_order_items with CASCADE delete from parent PO",
+        "FKs to suppliers, auth.users, items",
+        "RLS: read authenticated, write admin + manager on both tables",
+        "Indexes on key query columns",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify CASCADE on PO items, CHECK constraint on status, all FKs, RLS on both tables."
+      },
+      "priority": 7,
+      "dependencies": ["US-15-003", "US-15-005"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00007. CASCADE on PO items, CHECK on status, FKs to suppliers/users/items, RLS on both tables, indexes on key columns, updated_at trigger."
+    },
+    {
+      "id": "US-15-008",
+      "title": "Create inventory_requests and request_items tables migration",
+      "description": "Migration for inventory_requests: id uuid PK, requested_by uuid FK references auth.users NOT NULL, status text CHECK (IN ('pending','approved','fulfilled','declined')) default 'pending', reason text, project_reference text, reviewed_by uuid FK references auth.users, reviewed_at timestamptz, created_at, updated_at. And request_items: id uuid PK, request_id uuid FK references inventory_requests ON DELETE CASCADE, item_id uuid FK references items, quantity integer NOT NULL. RLS: requestors can read own + insert, admin + manager can read all + update status.",
+      "acceptanceCriteria": [
+        "inventory_requests table with status CHECK constraint",
+        "request_items with CASCADE delete from parent request",
+        "RLS: requestors read/insert own, admin+manager read all + update",
+        "Requestors cannot update status or other users' requests",
+        "Indexes on requested_by, status",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify RLS allows requestors to only see own requests and insert new ones. Admin+manager can read all and update. No requestor update access."
+      },
+      "priority": 8,
+      "dependencies": ["US-15-005", "US-15-001"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00008. Requestors read/insert own, admin+manager read all + update. CASCADE on request_items. No requestor update access. Indexes on requested_by, status."
+    },
+    {
+      "id": "US-15-009",
+      "title": "Create custom_field_definitions table migration",
+      "description": "Migration for custom_field_definitions: id uuid PK, name text NOT NULL, field_type text CHECK (IN ('text','number','date','boolean','select')) NOT NULL, options jsonb (for select type), category_id uuid FK references categories nullable (null = applies to all items), is_required boolean default false, created_at. RLS: all authenticated can read, admins can write.",
+      "acceptanceCriteria": [
+        "custom_field_definitions table with all columns",
+        "field_type CHECK constraint",
+        "Nullable category_id (null means global)",
+        "options JSONB for select-type fields",
+        "RLS: read authenticated, write admin only",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify CHECK on field_type, nullable category_id FK, RLS policies."
+      },
+      "priority": 9,
+      "dependencies": ["US-15-002"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00009. CHECK on field_type, nullable category_id FK, options jsonb, RLS admin-only write."
+    },
+    {
+      "id": "US-15-010",
+      "title": "Create notifications table migration",
+      "description": "Migration for notifications: id uuid PK, user_id uuid FK references auth.users ON DELETE CASCADE NOT NULL, type text NOT NULL (low_stock, out_of_stock, po_reminder, po_overdue, request_update), title text NOT NULL, message text, is_read boolean default false, reference_id uuid (generic pointer to related entity), reference_type text (item, purchase_order, request), created_at. RLS: users can only read/update own notifications. Index on user_id + is_read for unread count queries.",
+      "acceptanceCriteria": [
+        "notifications table with all columns",
+        "FK to auth.users with CASCADE",
+        "RLS: users read/update only own notifications",
+        "No cross-user notification access",
+        "Composite index on (user_id, is_read)",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify RLS restricts to own notifications only, composite index exists, CASCADE on user delete."
+      },
+      "priority": 10,
+      "dependencies": ["US-15-001"],
+      "isPassed": true,
+      "notes": "Migration at docs/migrations/00010. CASCADE on user delete, composite index (user_id, is_read), RLS own-only read/update."
+    },
+    {
+      "id": "US-15-011",
+      "title": "Create updated_at trigger function",
+      "description": "Create a reusable trigger function update_updated_at_column() that sets updated_at = now() before UPDATE. Apply this trigger to all tables with updated_at columns: profiles, items, suppliers, purchase_orders, inventory_requests. This should be in the first migration or a shared migration that runs before table creation.",
+      "acceptanceCriteria": [
+        "Generic trigger function update_updated_at_column() created",
+        "Trigger applied to profiles, items, suppliers, purchase_orders, inventory_requests",
+        "Function sets NEW.updated_at = now() and returns NEW",
+        "Valid PostgreSQL"
+      ],
+      "verification": {
+        "type": "database",
+        "test": "Review SQL. Verify function exists, triggers are created on all relevant tables, function returns NEW correctly."
+      },
+      "priority": 11,
+      "dependencies": ["US-15-001"],
+      "isPassed": true,
+      "notes": "Function created in 00001, triggers applied in 00001 (profiles), 00003 (suppliers), 00005 (items), 00007 (purchase_orders), 00008 (inventory_requests). All 5 tables covered."
+    },
+    {
+      "id": "US-15-012",
+      "title": "Document complete schema as reference",
+      "description": "Create docs/database-schema.md documenting the complete schema: all tables, columns, types, constraints, relationships, indexes, and RLS policy summaries in a readable format. Include an entity-relationship description showing how tables connect. This serves as the reference for all developers working with the database.",
+      "acceptanceCriteria": [
+        "Markdown file with all 13 tables documented",
+        "Each table lists columns with types and constraints",
+        "Foreign key relationships clearly described",
+        "RLS policy summary per table (who can read/write)",
+        "Entity relationship overview section",
+        "File is well-organized and under 200 lines"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open docs/database-schema.md. Verify all 13 tables are listed with columns. Cross-reference with migration stories to ensure nothing is missing."
+      },
+      "priority": 12,
+      "dependencies": ["US-15-001", "US-15-002", "US-15-003", "US-15-004", "US-15-005", "US-15-006", "US-15-007", "US-15-008", "US-15-009", "US-15-010", "US-15-011"],
+      "isPassed": true,
+      "notes": "docs/database-schema.md created with all 13 tables, columns, types, constraints, relationships, indexes, RLS summaries, and ER overview. Under 200 lines."
+    }
+  ]
+}

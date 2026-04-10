@@ -1,0 +1,171 @@
+{
+  "prdId": "PRD-20",
+  "feature": "AI — Anomaly Detection & Natural Language Search",
+  "description": "Two AI-powered features: (1) Anomaly Detection — automatically flags unusual stock movements such as quantity spikes, abnormally large adjustments, or unusual patterns (e.g., frequent adjustments for the same item). Anomalies surface as contextual alerts in the dashboard and movements page. (2) Natural Language Search — a conversational search bar that parses queries like 'what's running low in electronics' or 'show me items from Acme received last week' into structured filters and returns matching results. Both features work client-side with demo data using heuristic algorithms, with optional AI enhancement via server function.",
+  "buildOrder": 19,
+  "dependsOnPrds": ["PRD-09", "PRD-17"],
+  "stories": [
+    {
+      "id": "US-20-001",
+      "title": "Anomaly detection engine",
+      "description": "Create src/lib/anomaly-engine.ts — pure functions for detecting movement anomalies. detectQuantitySpike(movement, itemHistory): flags if quantity > 3× the item's average movement quantity. detectFrequentAdjustments(itemMovements, windowDays=7): flags if >3 adjustments for the same item within window. detectUnusualTiming(movement, itemHistory): flags movements outside normal patterns (e.g., weekend activity when all history is weekday). analyzeMovements(movements[]): returns AnomalyAlert[] with { movementId, itemId, type, severity (warning|critical), title, description, detectedAt }. Handles edge cases: new items with <5 movements return no anomalies.",
+      "acceptanceCriteria": [
+        "Quantity spike detection at 3× average threshold",
+        "Frequent adjustments detection within 7-day window",
+        "Unusual timing detection based on historical patterns",
+        "Returns typed AnomalyAlert array",
+        "Severity levels: warning and critical",
+        "No false positives for items with <5 movements",
+        "Pure functions, no side effects"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import analyzeMovements, call with seed movement data that includes a spike. Verify anomaly detected with correct type and severity. Call with normal data — no anomalies. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "Created src/lib/anomaly-engine.ts with detectQuantitySpike (3× avg), detectFrequentAdjustments (>3 in 7d), detectUnusualTiming (weekend), analyzeMovements. Min 5 history. Severity: warning/critical."
+    },
+    {
+      "id": "US-20-002",
+      "title": "Anomaly alert cards",
+      "description": "Create src/components/insights/AnomalyAlertCard.tsx — a compact alert card for displaying an anomaly. Shows: alert icon (warning triangle amber, critical red), title, description, item name + SKU link, movement details (type, qty, date), and 'Investigate' button linking to the movement/item. Dismiss button to acknowledge. Cards stack vertically. Left border colored by severity.",
+      "acceptanceCriteria": [
+        "Alert card with severity icon and coloring",
+        "Title and description from anomaly data",
+        "Item name as clickable link",
+        "Movement details shown",
+        "Investigate button links to relevant page",
+        "Dismiss button acknowledges alert",
+        "Left border by severity color",
+        "Compact layout"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Render AnomalyAlertCard with warning and critical test data. Colors and icons match severity. Links point to correct item/movement. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-20-001"],
+      "isPassed": true,
+      "notes": "AnomalyAlertCard with severity icon/border, item link, movement details, Investigate/Dismiss buttons. Pulse animation for critical."
+    },
+    {
+      "id": "US-20-003",
+      "title": "Dashboard anomaly alerts section",
+      "description": "Add an 'Anomaly Alerts' section to the dashboard, placed between needs-attention and reorder suggestions. Runs analyzeMovements on recent movements (last 30 days). Shows up to 3 most critical anomalies as AnomalyAlertCards. Section title 'Anomaly Alerts' with count badge. 'View All' link to /app/insights#anomalies. Section hidden when no anomalies detected. Critical anomalies have a subtle pulsing border animation.",
+      "acceptanceCriteria": [
+        "Section on dashboard in correct position",
+        "Analyzes last 30 days of movements",
+        "Top 3 most critical shown",
+        "Count badge on title",
+        "View All link to insights page",
+        "Hidden when no anomalies",
+        "Critical alerts have pulsing animation",
+        "Loading skeleton while analyzing"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode (with seed data containing anomalous movement). Dashboard shows Anomaly Alerts section with cards. Click View All — navigates to insights. If no anomalies in seed data, section hidden. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-20-002", "US-06-001"],
+      "isPassed": true,
+      "notes": "DashboardAnomalySection between needs-attention and reorder. Top 3 critical, count badge, View All link. Hidden when empty."
+    },
+    {
+      "id": "US-20-004",
+      "title": "Natural language query parser",
+      "description": "Create src/lib/nl-search-parser.ts — parses conversational search queries into structured filters. parseQuery(query: string): returns { searchTerms: string[], filters: { category?, supplier?, status?, location?, dateRange?, movementType? } }. Pattern matching rules: 'low stock' / 'running low' → status: low_stock. 'out of stock' → status: out_of_stock. 'from [supplier]' → supplier match. 'in [category/location]' → category or location match. 'last week/month' → dateRange. 'received/shipped' → movementType. Falls back to plain text search for unrecognized patterns. Case-insensitive.",
+      "acceptanceCriteria": [
+        "Parses 'running low in electronics' → status: low_stock, category: electronics",
+        "Parses 'items from Acme' → supplier: Acme",
+        "Parses 'received last week' → movementType: received, dateRange: last 7 days",
+        "Parses 'out of stock' → status: out_of_stock",
+        "Falls back to text search for unknown patterns",
+        "Case-insensitive matching",
+        "Returns structured filter object"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import parseQuery. Test: parseQuery('what is running low in electronics') returns status and category filters. parseQuery('items from Acme received last week') returns supplier and date filters. parseQuery('random text') returns searchTerms only. No errors."
+      },
+      "priority": 4,
+      "dependencies": [],
+      "isPassed": true,
+      "notes": "Created src/lib/nl-search-parser.ts. Parses status (low_stock, out_of_stock), movement type, date ranges, supplier ('from X'), category ('in X'). Falls back to search terms."
+    },
+    {
+      "id": "US-20-005",
+      "title": "Natural language search UI in command palette",
+      "description": "Enhance the command palette (PRD-17) with natural language search support. When the user types a conversational query (detected by length >3 words or presence of NL keywords like 'show me', 'what', 'find'), run it through parseQuery and display results as a special 'Search Results' section showing matching items with the applied filters shown as tags above results. Show a 'Searching: [interpreted filters]' hint below the input. Max 10 results. If no matches, show 'No items match your query' with the interpreted filters displayed.",
+      "acceptanceCriteria": [
+        "Detects NL queries by length/keywords",
+        "Runs through parseQuery",
+        "Shows interpreted filters as tags",
+        "Search Results section with matching items",
+        "Max 10 results",
+        "No matches message with filter display",
+        "Hint showing interpreted query",
+        "Falls back to standard search for short queries"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open CMD+K. Type 'show me items running low' — results show low stock items with filter tag. Type 'electronics from Acme' — filters applied, matching items shown. Type short query 'bolt' — standard search (no NL). No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-20-004", "US-17-001", "US-17-002"],
+      "isPassed": true,
+      "notes": "NL search in command palette — detects NL queries (>3 words or NL keywords), shows filter tags, applies status/category/supplier filters, max 10 results."
+    },
+    {
+      "id": "US-20-006",
+      "title": "Anomalies section on insights page",
+      "description": "Add an 'Anomalies' section (anchor #anomalies) to the /app/insights page below the forecast section. Full list of all detected anomalies from last 90 days as AnomalyAlertCards. Filter by severity (all/warning/critical) and anomaly type (spike/frequent/timing). Sort by date or severity. Summary stat: total anomalies, critical count, most affected item. Dismissed anomalies hidden but accessible via 'Show Dismissed' toggle.",
+      "acceptanceCriteria": [
+        "Anomalies section with #anomalies anchor",
+        "Full list from last 90 days",
+        "Filter by severity and type",
+        "Sort by date or severity",
+        "Summary stats above list",
+        "Dismissed anomalies hidden by default",
+        "Show Dismissed toggle",
+        "Responsive layout"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/insights#anomalies. Scrolls to anomalies section. Cards listed. Filter by critical — only critical shown. Dismiss one — disappears. Toggle Show Dismissed — reappears. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-20-001", "US-20-002", "US-19-007"],
+      "isPassed": true,
+      "notes": "Anomalies section on insights page with #anomalies anchor. Filters by severity/type, summary stats, Show Dismissed toggle. Full 90-day list."
+    },
+    {
+      "id": "US-20-007",
+      "title": "AI-enhanced NL search server function",
+      "description": "Create a server function at src/server/functions/nl-search.ts that uses OpenAI to parse complex natural language queries into structured filters. Handles nuanced queries the heuristic parser misses: 'items we ordered too much of', 'things that haven't moved in a month', 'what should I reorder before Friday'. Returns { filters, interpretation, suggestions[] }. Falls back to client-side parser if API unavailable. Rate limited to 20 calls/minute.",
+      "acceptanceCriteria": [
+        "Server function parses complex NL queries via OpenAI",
+        "Returns structured filters and interpretation text",
+        "Handles nuanced queries beyond heuristic parser",
+        "Falls back to client-side parser gracefully",
+        "Rate limited to 20/minute",
+        "Suggestions field offers query refinements"
+      ],
+      "requiresIntegration": {
+        "service": "OpenAI",
+        "keyNeeded": "OPENAI_API_KEY",
+        "notes": "Get from https://platform.openai.com/api-keys — shared with PRD-19"
+      },
+      "verification": {
+        "type": "e2e",
+        "test": "Call server function with complex query. Response includes filters and interpretation. Without API key, falls back to client-side results."
+      },
+      "priority": 7,
+      "dependencies": ["US-20-004"],
+      "isPassed": false,
+      "notes": "Integration story — deferred if OPENAI_API_KEY not available"
+    }
+  ]
+}

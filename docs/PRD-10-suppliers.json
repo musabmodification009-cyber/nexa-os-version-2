@@ -1,0 +1,162 @@
+{
+  "prdId": "PRD-10",
+  "feature": "Supplier Directory",
+  "description": "A dedicated section at /app/suppliers for managing all suppliers. Includes a searchable list/table of suppliers, a create/edit form sheet, and a detail view showing contact info, linked items, order history, and performance metrics (average lead time, fulfillment accuracy calculated from past POs). Admin and Manager can create/edit suppliers. All authenticated users can browse. Each supplier links to their items in the catalog and their purchase order history.",
+  "buildOrder": 10,
+  "dependsOnPrds": ["PRD-02", "PRD-05"],
+  "stories": [
+    {
+      "id": "US-10-001",
+      "title": "Suppliers list table",
+      "description": "Create src/components/suppliers/SuppliersTable.tsx — a data table at /app/suppliers. Columns: Name, Contact Person, Email, Phone, Lead Time (days), Items Count (number of linked items), Status. Data from useSuppliers(). Search input above table for name filtering. Pagination at 20 per page. Row click opens detail view. Sorted alphabetically by name.",
+      "acceptanceCriteria": [
+        "Table renders all columns with supplier data",
+        "Search input filters by supplier name",
+        "Items Count shows number of items with this preferred_supplier_id",
+        "Pagination at 20 per page",
+        "Row click triggers detail view (wired in composition story)",
+        "Empty state: 'No suppliers added yet'",
+        "Responsive: horizontal scroll on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/suppliers. Table shows 4 suppliers from seed data. Search 'Acme' — filters to matching supplier. Items count column shows linked item numbers. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "SuppliersTable with search, name sort, items count, status badge, 20/page pagination. Wired into suppliers page."
+    },
+    {
+      "id": "US-10-002",
+      "title": "Supplier form sheet",
+      "description": "Create src/components/suppliers/SupplierFormSheet.tsx — a Sheet for create/edit. Fields: Name (required), Contact Person, Email (validated), Phone, Address (textarea), Notes (textarea), Payment Terms, Lead Time Days (number), Min Order Quantity (number). Zod validation. Save calls useCreateSupplier or useUpdateSupplier. Supports both create and edit mode (pre-populated for edit).",
+      "acceptanceCriteria": [
+        "Sheet with all supplier fields",
+        "Name required validation",
+        "Email format validation",
+        "Lead time and min order as positive numbers",
+        "Create mode: empty form, 'New Supplier' title",
+        "Edit mode: pre-populated, 'Edit Supplier' title",
+        "Save creates/updates and closes sheet",
+        "Toast confirmation",
+        "Admin/Manager only"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/suppliers. Open new supplier form. Fill name only, save — created. Open again, enter invalid email — error. Edit existing supplier — form pre-filled. Change name, save — updated in table. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-02-007", "US-05-004"],
+      "isPassed": true,
+      "notes": "SupplierFormSheet with Zod validation, create/edit modes, email validation, admin/manager gated. Spread supplier array in useSuppliers for memo reactivity."
+    },
+    {
+      "id": "US-10-003",
+      "title": "Supplier detail sheet — overview",
+      "description": "Create src/components/suppliers/SupplierDetailSheet.tsx — a Sheet (560px) showing full supplier info. Header: supplier name, Edit button (admin/manager). Two-column detail grid: contact person, email (mailto link), phone (tel link), address, payment terms, lead time, min order qty, notes. Below: 'Linked Items' section showing a compact list of items where preferred_supplier_id matches, with name, SKU, qty, status badge. Max 10 items with 'View All in Catalog' link to /app/catalog?supplier=ID.",
+      "acceptanceCriteria": [
+        "Sheet shows all supplier details in organized layout",
+        "Email as mailto link, phone as tel link",
+        "Edit button for admin/manager",
+        "Linked Items section with compact item list",
+        "Max 10 items with 'View All' link",
+        "Empty linked items: 'No items from this supplier'",
+        "Close button and click-outside closes"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/suppliers. Click a supplier row. Detail sheet opens with all info. Linked items section shows items from this supplier. 'View All' link navigates to catalog filtered by supplier. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-10-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "SupplierDetailSheet with contact grid, mailto/tel links, linked items list with stock badges, edit button for admin/manager."
+    },
+    {
+      "id": "US-10-004",
+      "title": "Supplier detail — order history tab",
+      "description": "Add an 'Order History' tab/section to SupplierDetailSheet. Shows a compact table of purchase orders for this supplier from usePurchaseOrders filtered by supplier_id. Columns: PO number/ID, Status (badge), Items Count, Total Cost, Expected Delivery, Created Date. Sorted newest first. Max 10 entries with 'View All Orders' link. Empty state: 'No orders placed with this supplier.'",
+      "acceptanceCriteria": [
+        "Order history section with compact PO table",
+        "Columns: ID, status badge, item count, cost, dates",
+        "Filtered to this supplier only",
+        "Newest first",
+        "Max 10 with 'View All' link",
+        "Empty state message",
+        "Status badges match PO statuses (draft/submitted/received etc.)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, open supplier detail. Order history shows POs for this supplier from seed data. Status badges colored appropriately. If supplier has no POs — empty state shown. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-10-003", "US-02-004"],
+      "isPassed": true,
+      "notes": "SupplierOrderHistory component with PO table, status badges, newest first, max 10. Wired into detail sheet."
+    },
+    {
+      "id": "US-10-005",
+      "title": "Supplier performance metrics",
+      "description": "Add a 'Performance' section to SupplierDetailSheet showing calculated metrics: Average Lead Time (days between PO creation and full receipt), Fulfillment Accuracy (percentage of PO line items fully received vs ordered), Total Orders (count), and On-Time Delivery Rate (percentage of POs received by expected_delivery_date). Display as 4 small metric cards in a 2x2 grid within the detail sheet. Metrics calculated from PO data. If insufficient data (<3 POs), show 'Not enough data to calculate performance.'",
+      "acceptanceCriteria": [
+        "4 metric cards: Avg Lead Time, Fulfillment Accuracy, Total Orders, On-Time Rate",
+        "Metrics calculated from PO history",
+        "Insufficient data message when <3 completed POs",
+        "2x2 grid layout within sheet",
+        "Percentages formatted as X.X%",
+        "Lead time as X days"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open supplier detail for a supplier with PO history. Performance metrics section shows calculated values. If supplier has <3 POs, shows insufficient data message. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-10-003", "US-02-004"],
+      "isPassed": true,
+      "notes": "SupplierPerformance component with 4 metric cards. Shows insufficient data message when <3 received POs. Metrics: avg lead time, fulfillment accuracy, total orders, on-time rate."
+    },
+    {
+      "id": "US-10-006",
+      "title": "Delete/archive supplier with safety check",
+      "description": "Add delete action for suppliers (admin only). Before deletion, check if supplier has linked items or open POs. If linked items exist, show warning: 'This supplier is linked to X items. Deleting will remove the supplier reference from those items. Continue?' If open POs exist, prevent deletion: 'Cannot delete supplier with open purchase orders.' Use AlertDialog for confirmation.",
+      "acceptanceCriteria": [
+        "Delete option in supplier row actions (admin only)",
+        "Check for linked items — warning if yes",
+        "Check for open POs — block if yes with error message",
+        "AlertDialog confirmation with specific warning",
+        "Successful delete removes supplier and clears references from items",
+        "Toast confirmation after delete"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode (admin). Try deleting supplier with linked items — warning dialog appears. Confirm — supplier deleted, items' supplier reference cleared. Try deleting supplier with open PO — blocked with error. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-10-001", "US-05-004", "US-02-007"],
+      "isPassed": true,
+      "notes": "SupplierDeleteDialog with AlertDialog. Blocks on open POs (toast error). Warns about linked items. Clears item.supplierId on delete. Admin only."
+    },
+    {
+      "id": "US-10-007",
+      "title": "Suppliers page composition",
+      "description": "Compose the full /app/suppliers page in src/routes/app.suppliers.tsx. Header: 'Supplier Directory' heading, supplier count, '+ New Supplier' button (admin/manager). Table with search. Detail sheet wired to row clicks. URL param ?supplier=ID for direct linking. Page title 'Suppliers — Stackwise'.",
+      "acceptanceCriteria": [
+        "Page heading with count and New button",
+        "Table, search, detail sheet all composed",
+        "Row click opens detail, URL updates",
+        "?supplier=ID opens detail on load",
+        "Page title set correctly",
+        "Requestor: no new/edit/delete buttons"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/suppliers. Page renders fully. Click 'New Supplier' — form opens. Click row — detail opens, URL updates. Navigate to ?supplier=ID directly — detail opens. Switch to requestor — action buttons hidden. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-10-001", "US-10-002", "US-10-003", "US-10-004", "US-10-005", "US-10-006"],
+      "isPassed": true,
+      "notes": "Full page composition with URL param ?supplier=ID, detail sheet on row click, requestor redirected by route guard."
+    }
+  ]
+}

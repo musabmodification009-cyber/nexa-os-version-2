@@ -1,0 +1,191 @@
+{
+  "prdId": "PRD-22",
+  "feature": "Admin Settings — System Configuration",
+  "description": "Admin-only settings area at /app/settings providing system-wide configuration for the Stackwise inventory platform. Includes management interfaces for categories and tags (create, rename, delete with safety checks for linked items), custom field definitions (add/remove/reorder fields that appear on item detail), location hierarchy management (add/edit/delete nodes in the location tree), global reorder defaults (default reorder point, lead time, safety stock multiplier), and a demo data reset button. All sections are admin-only, enforced via route guards and PermissionGate. The page uses a tabbed layout to organize sections.",
+  "buildOrder": 21,
+  "dependsOnPrds": ["PRD-05", "PRD-07", "PRD-14"],
+  "stories": [
+    {
+      "id": "US-22-001",
+      "title": "Settings page layout with tabs",
+      "description": "Create src/routes/app.settings.tsx as the settings page at /app/settings. Page has a header 'Settings' with admin-only route guard (redirect non-admins to /app/dashboard with toast). Use shadcn Tabs with tab items: Categories, Custom Fields, Locations, Reorder Defaults, System. Default to Categories tab. Each tab renders a placeholder component initially. Mobile: tabs scroll horizontally.",
+      "acceptanceCriteria": [
+        "Route /app/settings renders with 'Settings' heading",
+        "Admin-only: non-admin roles redirected to /app/dashboard with 'Access denied' toast",
+        "5 tabs: Categories, Custom Fields, Locations, Reorder Defaults, System",
+        "Tabs scrollable horizontally on 390px mobile",
+        "Default tab is Categories",
+        "Page uses PermissionGate from PRD-05",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode (admin). Navigate to /app/settings. 5 tabs visible, Categories active by default. Click each tab — content area switches. Resize to 390px — tabs scroll. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-05-003", "US-05-004"],
+      "isPassed": true,
+      "notes": "Tabbed settings page with admin-only route guard, 5 tabs, ErrorBoundary per tab."
+    },
+    {
+      "id": "US-22-002",
+      "title": "Category management tab",
+      "description": "Create src/components/settings/CategoryManager.tsx. Displays a list of all categories with item count next to each. '+ Add Category' button opens inline input row at top. Each category row has rename (inline edit) and delete actions. Delete shows confirmation dialog; if category has linked items, show warning 'X items use this category — they will become uncategorized' and require explicit confirm. Uses useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory hooks from demo store.",
+      "acceptanceCriteria": [
+        "Lists all categories with item count badges",
+        "Add category: inline input at top, save on Enter or blur, cancel on Escape",
+        "Rename: click name to edit inline, save on Enter",
+        "Delete: confirmation dialog with item count warning",
+        "Deleting category with items shows specific warning message",
+        "Empty state: 'No categories yet' with add CTA",
+        "Loading state while mutations execute",
+        "Toast on success/failure for all operations",
+        "Component under 200 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to /app/settings Categories tab. Categories listed with item counts. Click '+ Add Category', type 'Test', press Enter — category appears. Click category name, rename to 'Test Renamed', press Enter — updated. Click delete on a category with items — warning dialog shows count. Confirm delete — category removed, toast shown. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-22-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "CategoryManager with add/rename/delete, item count badges, duplicate name validation, confirmation dialogs."
+    },
+    {
+      "id": "US-22-003",
+      "title": "Custom field definitions manager",
+      "description": "Create src/components/settings/CustomFieldManager.tsx. Manages custom field definitions that appear on item detail views. Each field has: name, type (text, number, boolean, select), and for select types a comma-separated options list. Display as a reorderable list (drag handle or up/down arrows). '+ Add Field' opens a form row with name input, type select, and options input (shown only for select type). Delete removes field definition (with warning that existing item values will be orphaned). Max 20 custom fields.",
+      "acceptanceCriteria": [
+        "Lists existing custom field definitions with name, type, options",
+        "Add field: inline form with name, type dropdown (text/number/boolean/select), options input for select type",
+        "Reorder fields with up/down arrow buttons",
+        "Delete with confirmation warning about orphaned values",
+        "Max 20 fields — add button disabled at limit with tooltip",
+        "Empty state: 'No custom fields defined'",
+        "Toast on all mutations",
+        "Component under 220 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to /app/settings Custom Fields tab. Add a text field 'Serial Number' — appears in list. Add a select field 'Condition' with options 'New,Used,Refurbished' — options shown. Reorder fields. Delete a field — confirmation shown, field removed. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-22-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "CustomFieldManager with add/delete/reorder, type selection, select options, max 20 limit."
+    },
+    {
+      "id": "US-22-004",
+      "title": "Location hierarchy settings tab",
+      "description": "Create src/components/settings/LocationSettings.tsx. Renders the location tree from useLocationTree() with indented tree view. Each node shows name, type badge, and item count. Add child button on each node (creates child at next level down). Edit name inline. Delete with safety check — cannot delete if location has items or children (show specific error). Add root warehouse button at top. Reuses location hooks from PRD-14.",
+      "acceptanceCriteria": [
+        "Displays full location tree with indentation per level",
+        "Type badges for warehouse/zone/aisle/shelf/bin",
+        "Item count per location",
+        "Add child: only allowed types shown (warehouse can add zone, zone can add aisle, etc.)",
+        "Edit name inline on click",
+        "Delete blocked if location has items — shows 'X items assigned' error",
+        "Delete blocked if location has children — shows 'Remove children first' error",
+        "Add root warehouse button at top",
+        "Empty state: 'No locations configured'",
+        "Component under 220 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to /app/settings Locations tab. Location tree renders with indentation. Click add child on a warehouse — zone form appears. Add a zone, it appears nested. Try deleting a location with items — error shown. Edit a location name inline. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-22-001", "US-14-001"],
+      "isPassed": true,
+      "notes": "LocationSettings with tree view, add child, inline edit, delete safety checks."
+    },
+    {
+      "id": "US-22-005",
+      "title": "Global reorder defaults settings",
+      "description": "Create src/components/settings/ReorderDefaults.tsx. A form with fields: Default Reorder Point (number, min 0), Default Lead Time Days (number, min 1), Safety Stock Multiplier (number, min 1.0, step 0.1), Default Order Quantity (number, min 1). Values stored in demo store under a 'settings' key. Save button with loading state. Shows current values on load. Reset to Defaults button restores factory values (reorder: 10, lead time: 7, multiplier: 1.5, order qty: 25).",
+      "acceptanceCriteria": [
+        "Form with 4 numeric fields and validation",
+        "Save button with loading state, success toast",
+        "Reset to Defaults button restores factory values",
+        "Values persist in demo store during session",
+        "Validation: all fields required, min values enforced",
+        "Error state on invalid input",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to /app/settings Reorder Defaults tab. Default values shown. Change reorder point to 15, click Save — toast shown. Navigate away and back — value persists at 15. Click Reset to Defaults — values revert. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-22-001", "US-02-002"],
+      "isPassed": true,
+      "notes": "ReorderDefaults form with 4 numeric fields, save/reset, validation, session persistence."
+    },
+    {
+      "id": "US-22-006",
+      "title": "System tab with demo reset",
+      "description": "Create src/components/settings/SystemSettings.tsx. Contains a 'Demo Data' section with: current seed data summary (X items, Y suppliers, Z locations), 'Reset Demo Data' button that calls resetDemoData() from DemoContext, shows confirmation dialog ('This will reset all data to defaults. This cannot be undone.'), and success toast. Also shows app version (hardcoded '1.0.0') and build info section.",
+      "acceptanceCriteria": [
+        "Demo Data section with seed data summary counts",
+        "Reset Demo Data button with confirmation dialog",
+        "Confirmation dialog warns about data loss",
+        "After reset, summary counts refresh to defaults",
+        "Success toast on reset",
+        "App version and build info displayed",
+        "Non-demo mode: show 'Demo controls not available' message",
+        "Component under 120 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to /app/settings System tab. Seed data counts shown. Click Reset Demo Data — confirmation dialog appears. Confirm — data resets, toast shown, counts refresh. Navigate to /app/catalog — items back to seed data. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-22-001", "US-02-003"],
+      "isPassed": true,
+      "notes": "SystemSettings with demo data summary, reset button with confirmation, version info."
+    },
+    {
+      "id": "US-22-007",
+      "title": "Add Settings to sidebar navigation",
+      "description": "Wire the Settings page into the sidebar navigation. Add a 'Settings' item with Cog icon in a 'System' nav group at the bottom of the sidebar. Only visible to Admin role (use role-based sidebar filtering from PRD-05). Active state when on /app/settings route.",
+      "acceptanceCriteria": [
+        "Settings nav item visible only to Admin role",
+        "Cog icon with 'Settings' label",
+        "In 'System' nav group at sidebar bottom",
+        "Active state highlights when on /app/settings",
+        "Manager and Requestor do NOT see Settings nav item",
+        "No DOM leakage — hidden items not in DOM"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode (admin), sidebar shows Settings in System group. Click it — navigates to /app/settings with active state. Switch demo role to Manager — Settings nav item disappears from DOM. Switch to Requestor — still hidden. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-05-002", "US-01-004"],
+      "isPassed": true,
+      "notes": "Settings in Admin nav group with canAccessSettings permission, Cog icon, active state."
+    },
+    {
+      "id": "US-22-008",
+      "title": "Settings error handling and edge cases",
+      "description": "Add error boundaries around each settings tab content area so one failing tab doesn't break the whole page. Handle edge cases: duplicate category names (show inline error 'Category already exists'), empty field names rejected, extremely long names truncated in display (max 50 chars). All delete operations must have undo capability via toast with 'Undo' action (5 second window) or at minimum a confirmation step.",
+      "acceptanceCriteria": [
+        "Error boundary per tab — one tab crashing shows error state, others still work",
+        "Duplicate category name shows inline 'already exists' error",
+        "Empty names rejected with inline validation",
+        "Names over 50 chars truncated with ellipsis in list display",
+        "All deletes have confirmation dialog",
+        "Toast notifications on all success/failure operations",
+        "Component error states show retry option"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to Categories tab. Try adding a category with a name that already exists — inline error shown. Try adding with empty name — rejected. Add a category with a very long name — truncated in display. Delete a category — confirmation dialog appears before deletion. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-22-002", "US-22-003", "US-22-004"],
+      "isPassed": true,
+      "notes": "ErrorBoundary per tab, duplicate category validation, empty name rejection, name truncation at 50 chars, confirmation dialogs on all deletes."
+    }
+  ]
+}

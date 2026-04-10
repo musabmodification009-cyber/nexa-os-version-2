@@ -1,0 +1,120 @@
+{
+  "prdId": "PRD-23",
+  "feature": "Admin Settings — User Management",
+  "description": "Admin-only user management panel within the settings area. Admins can view all registered users, invite new users by email, assign and change roles (Admin, Inventory Manager, Requestor), and deactivate accounts. Safety rails prevent the last remaining admin from being demoted or deactivated. In demo mode, a mock user list is shown from seed data. The panel lives as a tab or sub-route under /app/settings/users and reuses the RBAC infrastructure from PRD-05.",
+  "buildOrder": 22,
+  "dependsOnPrds": ["PRD-05"],
+  "stories": [
+    {
+      "id": "US-23-001",
+      "title": "User list table component",
+      "description": "Create src/components/settings/UserManagement.tsx. Displays a table of all users with columns: Name, Email, Role (badge), Status (active/inactive), Joined date. In demo mode, show 5 mock users (2 admin, 2 manager, 1 requestor) from seed data. Table uses shadcn Table with sticky header, row hover. Search input at top filters by name or email. Empty state: 'No users found'. Pagination if > 20 users.",
+      "acceptanceCriteria": [
+        "Table renders columns: Name, Email, Role badge, Status, Joined",
+        "Demo mode shows 5 seed users with mixed roles",
+        "Search input filters by name or email (case-insensitive)",
+        "Role shown as colored badge (admin=teal, manager=amber, requestor=muted)",
+        "Empty state when search yields no results",
+        "Responsive: card layout on 390px mobile",
+        "Component under 200 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, navigate to /app/settings users section. Table shows 5 users with role badges. Type a name in search — list filters. Clear search — all users shown. Resize to 390px — switches to card layout. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-22-001", "US-05-001"],
+      "isPassed": true,
+      "notes": "User table with 5 seed users, search, role badges, mobile card layout."
+    },
+    {
+      "id": "US-23-002",
+      "title": "Invite user dialog",
+      "description": "Create src/components/settings/InviteUserDialog.tsx. A dialog triggered by '+ Invite User' button (admin only). Form fields: Email (required, validated), Role dropdown (Admin/Inventory Manager/Requestor, default Requestor). Submit button with loading state. In demo mode, adds mock user to the demo user list with 'pending' status and shows success toast. Real mode would call Supabase invite (stubbed).",
+      "acceptanceCriteria": [
+        "Dialog opens from '+ Invite User' button",
+        "Email field with validation (required, valid email format)",
+        "Role dropdown with three options, defaults to Requestor",
+        "Submit shows loading spinner, then success toast",
+        "Demo mode adds user to mock list with 'pending' status",
+        "Duplicate email shows inline error 'User already exists'",
+        "Dialog closes on success",
+        "Component under 150 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to user management. Click '+ Invite User'. Enter invalid email — validation error. Enter valid email, select Manager role, submit — toast shown, dialog closes, new user appears in table with 'pending' status and Manager badge. Try same email again — 'User already exists' error. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-23-001"],
+      "isPassed": true,
+      "notes": "Invite dialog with email validation, role selection, duplicate check, pending status."
+    },
+    {
+      "id": "US-23-003",
+      "title": "Change user role action",
+      "description": "Create src/components/settings/ChangeRoleDropdown.tsx. Inline dropdown on each user row allowing admins to change a user's role. Dropdown shows the three roles with the current role checked. Changing role shows confirmation dialog: 'Change [name]'s role from [old] to [new]?' with Confirm/Cancel. Updates demo store on confirm. Toast on success.",
+      "acceptanceCriteria": [
+        "Dropdown on each user row shows three role options",
+        "Current role has checkmark indicator",
+        "Selecting different role shows confirmation dialog with user name and role change",
+        "Confirm updates role in demo store and refreshes table",
+        "Cancel dismisses dialog without changes",
+        "Success toast on role change",
+        "Cannot change own role (dropdown disabled on current admin's row with tooltip 'Cannot change your own role')",
+        "Component under 120 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, go to user management. Click role dropdown on a Manager user. Select 'Requestor' — confirmation dialog appears. Confirm — role badge updates to Requestor, toast shown. Try own row — dropdown disabled. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-23-001"],
+      "isPassed": true,
+      "notes": "Role dropdown with confirmation dialog, disabled on self with tooltip."
+    },
+    {
+      "id": "US-23-004",
+      "title": "Last admin demotion protection",
+      "description": "Add safety logic to ChangeRoleDropdown and deactivation flows. If the target user is the last remaining admin, prevent role change and deactivation. Show an alert: 'Cannot change role — this is the only admin. Promote another user first.' Count admins in the user list; if count === 1 and the target is that admin, block the action. This applies to both role change and deactivation.",
+      "acceptanceCriteria": [
+        "Cannot demote the last admin — dropdown shows disabled state for non-admin options",
+        "Attempting to change last admin's role shows alert message",
+        "Cannot deactivate the last admin — deactivate button disabled with tooltip",
+        "If there are 2+ admins, all role changes and deactivations are allowed",
+        "Protection recalculates after any role change",
+        "Alert message: 'Cannot change role — this is the only admin. Promote another user first.'"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode with 2 admins. Demote one admin to Manager — succeeds. Now try to demote the remaining admin — blocked with alert message. Promote the manager back to admin — now both can be demoted again. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-23-003"],
+      "isPassed": true,
+      "notes": "Last admin protection on role dropdown and deactivation with tooltip messages."
+    },
+    {
+      "id": "US-23-005",
+      "title": "Deactivate and reactivate user",
+      "description": "Add deactivate/reactivate actions to each user row via a dropdown menu (three-dot icon). Deactivate shows confirmation: 'Deactivate [name]? They will lose access immediately.' Sets user status to 'inactive'. Inactive users shown with muted styling and 'Inactive' badge. Reactivate option appears on inactive users. Cannot deactivate yourself. Cannot deactivate the last admin (from US-23-004).",
+      "acceptanceCriteria": [
+        "Three-dot menu on each row with Deactivate/Reactivate option",
+        "Deactivate confirmation dialog with user name",
+        "Deactivated user shows muted row styling and 'Inactive' status badge",
+        "Reactivate option on inactive users, success toast",
+        "Cannot deactivate yourself — option disabled with tooltip",
+        "Last admin protection from US-23-004 applies",
+        "Toast on success for both actions"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, click three-dot menu on a non-admin user. Click Deactivate — confirmation dialog. Confirm — user row muted with 'Inactive' badge. Click three-dot again — shows 'Reactivate'. Click Reactivate — user active again. Try deactivating yourself — option disabled. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-23-001", "US-23-004"],
+      "isPassed": true,
+      "notes": "Deactivate/reactivate via dropdown menu, confirmation dialog, muted styling for inactive."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+-- Migration: updated_at trigger function (reference)
+-- PRD-15 / US-15-011
+--
+-- The reusable function update_updated_at_column() was created in
+-- migration 00001_profiles_and_user_roles.sql.
+--
+-- It is applied as a BEFORE UPDATE trigger on these tables:
+--   - profiles       (00001)
+--   - suppliers      (00003)
+--   - items          (00005)
+--   - purchase_orders (00007)
+--   - inventory_requests (00008)
+--
+-- No additional SQL needed — this file documents the trigger coverage.

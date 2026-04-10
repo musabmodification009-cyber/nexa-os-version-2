@@ -1,0 +1,187 @@
+{
+  "prdId": "PRD-09",
+  "feature": "Stock Movements",
+  "description": "Stock movements are the audit trail of every inventory change. Every receive, ship, adjust, or transfer creates an immutable movement record. This PRD covers the movements page at /app/movements with a log table, filters by type/item/date, a manual movement entry form, and the automatic quantity recalculation logic. When a movement is created, the referenced item's quantity_on_hand updates accordingly. The movement history per item is also surfaced in the item detail sheet (PRD-08). Only Admin and Manager roles can log movements.",
+  "buildOrder": 9,
+  "dependsOnPrds": ["PRD-07"],
+  "stories": [
+    {
+      "id": "US-09-001",
+      "title": "Movements log table",
+      "description": "Create src/components/movements/MovementsTable.tsx — a data table for the movements page. Columns: Type (icon + label), Item Name (link), Quantity (+/- with color), Direction (in/out badge), Performed By, Reference/Note, Timestamp (relative + absolute on hover). Data from useMovements(). Pagination at 25 per page. Sorted by timestamp descending (newest first). Type column uses icons: PackageCheck (received), PackageMinus (shipped), PenLine (adjusted), ArrowLeftRight (transferred).",
+      "acceptanceCriteria": [
+        "Table renders all columns with correct data",
+        "Type shows icon + label for each movement type",
+        "Quantity: green +N for 'in', red -N for 'out'",
+        "Timestamp shows relative time, full date on hover tooltip",
+        "Pagination: 25 per page with controls",
+        "Default sort: newest first",
+        "Empty state: 'No stock movements recorded'",
+        "Responsive: horizontal scroll on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/movements. Table shows movements from seed data (70 total). First entries are newest. Pagination shows 25 per page. Icons match movement types. Quantities colored correctly. Hover timestamp — full date tooltip. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "MovementsTable with type icons, colored qty, direction badges, relative timestamps with tooltip, 25/page pagination. 70 seed movements across 3 pages."
+    },
+    {
+      "id": "US-09-002",
+      "title": "Movements filter bar",
+      "description": "Create src/components/movements/MovementsFilters.tsx — filter bar above the table. Filters: Movement Type (multi-select: received, shipped, adjusted, transferred), Item (searchable select from useItems), Date Range (from/to date pickers), Performed By (select from unique performers in data). Clear Filters button. Filters apply client-side. On mobile, collapses into a 'Filters' sheet button.",
+      "acceptanceCriteria": [
+        "4 filter controls: type, item, date range, performer",
+        "Type filter allows multi-select",
+        "Item filter is searchable dropdown",
+        "Date range with from/to date pickers",
+        "Filters apply immediately, update table + pagination",
+        "Clear Filters resets all",
+        "Mobile: collapses into filter sheet",
+        "Active filter count on mobile button"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/movements. Select type 'received' — only received movements shown. Select an item — only that item's movements. Set date range for last 7 days — filtered results. Clear — all restored. Resize to 390px — filter sheet works. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-09-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "MovementsFilters with type checkboxes, item select, date range, performer select. Client-side filtering. Mobile sheet layout. Clear button."
+    },
+    {
+      "id": "US-09-003",
+      "title": "Log movement form sheet",
+      "description": "Create src/components/movements/MovementFormSheet.tsx — a Sheet for manually logging a movement. Fields: Item (searchable select, required), Movement Type (select: received/shipped/adjusted/transferred), Quantity (number input, required, positive), Direction (auto-set: received=in, shipped=out, adjusted=configurable, transferred=out from source), Reference Note (textarea), From Location and To Location (for transfers only, shown conditionally). On save, calls useCreateMovement which creates the movement AND updates the item's quantity_on_hand. Toast confirmation with summary.",
+      "acceptanceCriteria": [
+        "Sheet slides from right with form fields",
+        "Item is searchable select with all active items",
+        "Type select with 4 options",
+        "Quantity: positive number, required",
+        "Direction auto-determined by type (configurable for adjustments)",
+        "From/To Location fields appear only for 'transferred' type",
+        "Reference note textarea",
+        "Save creates movement and updates item quantity",
+        "Toast: 'Movement logged: +25 Widget A (received)'",
+        "Form validates: item required, quantity > 0",
+        "Admin/Manager only (PermissionGate)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/movements. Open log movement form. Select an item, set type 'received', quantity 10, add note. Save — movement appears in table, item quantity updated. Open form, set type 'transferred' — location fields appear. Submit empty — validation errors. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-02-007", "US-05-004"],
+      "isPassed": true,
+      "notes": "MovementFormSheet with item select, type, qty, direction (auto for received/shipped/transferred, configurable for adjusted), transfer locations, reference note. Validation, toast, PermissionGate."
+    },
+    {
+      "id": "US-09-004",
+      "title": "Movements page header and composition",
+      "description": "Build the full /app/movements page in src/routes/app.movements.tsx. Page header: 'Stock Movements' heading, movement count subtitle, '+ Log Movement' button (admin/manager only, amber accent). Compose: header, filter bar, movements table. Support URL query param ?item=ID to pre-filter by item (linked from item detail sheet). Set page title 'Movements — Stackwise'.",
+      "acceptanceCriteria": [
+        "Page heading 'Stock Movements' with count",
+        "'+ Log Movement' button for admin/manager",
+        "Button opens MovementFormSheet",
+        "Filter bar and table composed correctly",
+        "?item=ID query param pre-filters by item",
+        "Page title 'Movements — Stackwise'",
+        "Requestor: no log button, read-only table"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/movements. Page renders with heading, button, filters, table. Click 'Log Movement' — form opens. Navigate to /app/movements?item=<id> — table pre-filtered to that item. Switch to requestor — log button hidden. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-09-001", "US-09-002", "US-09-003"],
+      "isPassed": true,
+      "notes": "Page has heading, count, Log Movement button (PermissionGated), filters, table. validateSearch supports ?item= param to pre-filter. Requestor gating via PermissionGate verified by code inspection (no role switcher UI yet)."
+    },
+    {
+      "id": "US-09-005",
+      "title": "Quick movement from catalog row action",
+      "description": "Wire the 'Log Movement' action in the catalog table row actions menu (US-08-007). Clicking it opens the MovementFormSheet with the item pre-selected (item field filled and disabled). User only needs to choose type, quantity, and note. This enables fast movement logging without leaving the catalog page.",
+      "acceptanceCriteria": [
+        "Catalog row action 'Log Movement' opens movement form",
+        "Item field pre-populated and disabled/locked",
+        "User fills type, quantity, note only",
+        "Save creates movement, updates item qty in catalog table",
+        "Toast confirmation",
+        "Sheet closes after save, catalog reflects updated quantity"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Click row actions on an item, select 'Log Movement'. Form opens with item pre-selected. Set type 'received', quantity 5. Save. Item's quantity in catalog table increases by 5. Toast shown. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-09-003", "US-08-007"],
+      "isPassed": true,
+      "notes": "Catalog row action opens MovementFormSheet with preSelectedItemId, item field locked. Save creates movement and shows toast. Sheet closes after save."
+    },
+    {
+      "id": "US-09-006",
+      "title": "Movement quantity validation and edge cases",
+      "description": "Add validation logic to the movement form: shipped/issued movements cannot exceed current quantity on hand (prevent negative stock — show error 'Insufficient stock. Current quantity: X'). Adjusted movements can go in either direction but require a note (reason for adjustment). Transferred movements require both from and to locations and they must be different. Quantity must be a positive integer. Show inline validation errors.",
+      "acceptanceCriteria": [
+        "Shipped: quantity cannot exceed item's current qty on hand",
+        "Error: 'Insufficient stock. Current quantity: X'",
+        "Adjusted: note/reason required",
+        "Transferred: from and to locations required and different",
+        "Error if from === to location: 'Source and destination must differ'",
+        "Quantity must be positive integer (no decimals, no zero, no negative)",
+        "All validation errors shown inline below relevant fields"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open movement form. Select item with qty 5, type 'shipped', quantity 10 — error about insufficient stock. Change to 5 — passes. Type 'adjusted', leave note empty — error. Type 'transferred', set same location for from/to — error. Set quantity 0 — error. Set quantity -1 — error. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-09-003"],
+      "isPassed": true,
+      "notes": "Shipped/transferred qty cannot exceed currentStock. Adjusted requires note. Transferred requires both locations, must differ. Qty must be positive integer. All inline errors."
+    },
+    {
+      "id": "US-09-007",
+      "title": "Movement summary statistics",
+      "description": "Add a row of summary stats above the movements table (below filters). Show 4 compact metric pills: Total Movements (count), Received (count of received type), Shipped (count of shipped), Adjustments (count of adjusted). Stats reflect current filter state. Uses muted card styling, inline layout. On mobile, wraps to 2x2 grid.",
+      "acceptanceCriteria": [
+        "4 summary pills: Total, Received, Shipped, Adjustments",
+        "Counts reflect currently filtered data",
+        "Inline row on desktop, 2x2 grid on mobile",
+        "Muted card styling, compact size",
+        "Updates when filters change"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Enter demo mode, /app/movements. Summary stats visible showing counts. Apply type filter 'received' — Total count decreases, Received count stays same. Clear filters — counts restore. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-09-002"],
+      "isPassed": true,
+      "notes": "MovementStats component with 4 pills (Total, Received, Shipped, Adjustments). Reflects filtered data. 2x2 grid on mobile, inline on desktop."
+    },
+    {
+      "id": "US-09-008",
+      "title": "Movement detail expansion row",
+      "description": "Add expandable detail to movement table rows. Clicking a row expands an inline detail section below it showing: full reference note, resulting quantity after movement, from/to locations (for transfers), and a link to the item detail. Uses Collapsible or accordion pattern. Only one row expanded at a time. Expand/collapse with chevron icon on row.",
+      "acceptanceCriteria": [
+        "Chevron icon on each row indicating expandable",
+        "Click row expands inline detail below",
+        "Detail shows: full note, resulting qty, locations, item link",
+        "Only one row expanded at a time (others collapse)",
+        "Smooth height transition animation",
+        "Collapsed by default"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/movements. Click a row — detail expands below showing note and resulting quantity. Click another row — first collapses, second expands. Detail shows item link. No console errors."
+      },
+      "priority": 8,
+      "dependencies": ["US-09-001"],
+      "isPassed": true,
+      "notes": "Expandable detail row with chevron, note, locations for transfers, item link. Only one expanded at a time. Fragment key fix for React warning."
+    }
+  ]
+}

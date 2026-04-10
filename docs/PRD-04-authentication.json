@@ -1,0 +1,57 @@
+{
+  "prdId": "PRD-04",
+  "feature": "Authentication & User Profiles",
+  "description": "Implement full authentication flow using Supabase Auth (mocked for demo). This includes: a login page (/login) with email/password form, a signup page (/signup) with email/password registration, logout functionality, password reset flow with forgot-password and /reset-password pages, persistent session management via onAuthStateChange, a profiles table in Supabase with auto-creation trigger on signup, and an AuthContext provider that exposes user state throughout the app. New users default to the Requestor role. The auth system coexists with demo mode — when in demo mode, auth is bypassed entirely. When not in demo mode, unauthenticated users are redirected to /login from any /app/* route.",
+  "buildOrder": 4,
+  "dependsOnPrds": ["PRD-01", "PRD-03"],
+  "stories": [
+    {
+      "id": "US-04-001",
+      "title": "Create AuthContext provider",
+      "isPassed": true,
+      "notes": "AuthProvider + useAuth hook. Stubbed signIn/signUp/signOut/resetPassword. Wraps app in __root.tsx."
+    },
+    {
+      "id": "US-04-002",
+      "title": "Create login page",
+      "isPassed": true,
+      "notes": "Login at /login with email/password validation, error display, demo/auth redirect."
+    },
+    {
+      "id": "US-04-003",
+      "title": "Create signup page",
+      "isPassed": true,
+      "notes": "Signup at /signup with 4-field form, validation, success state with check-email message."
+    },
+    {
+      "id": "US-04-004",
+      "title": "Create forgot password page",
+      "isPassed": true,
+      "notes": "Forgot password at /forgot-password with email input and success confirmation."
+    },
+    {
+      "id": "US-04-005",
+      "title": "Create reset password page",
+      "isPassed": true,
+      "notes": "Reset password at /reset-password with new password + confirm + success state."
+    },
+    {
+      "id": "US-04-006",
+      "title": "Route protection for /app/* routes",
+      "isPassed": true,
+      "notes": "Guard in app.tsx: requires demo OR auth. Loading spinner while resolving. Redirects to /login."
+    },
+    {
+      "id": "US-04-007",
+      "title": "User menu in header with sign out",
+      "isPassed": true,
+      "notes": "DropdownMenu in Header with Demo Admin label, Exit Demo / Sign Out, Settings. Navigate-first pattern to avoid guard race."
+    },
+    {
+      "id": "US-04-008",
+      "title": "Auth form error handling and edge cases",
+      "isPassed": true,
+      "notes": "ErrorAlert component, inline field errors, errors clear on input change."
+    }
+  ]
+}

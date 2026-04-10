@@ -1,0 +1,192 @@
+{
+  "prdId": "PRD-19",
+  "feature": "AI — Smart Reorder & Demand Forecasting",
+  "description": "AI-powered analytics that analyze historical stock movement patterns to provide two key features: (1) Smart Reorder Suggestions — actionable cards recommending optimized reorder points and quantities for items based on consumption velocity, lead times, and safety stock calculations. (2) Demand Forecasting Dashboard — projected stock levels for 30/60/90 days with visual threshold zones (safe, low, critical). Both features use server-side AI via an edge function that processes movement history. The reorder suggestions appear on the dashboard and a dedicated /app/insights page. Admin and Manager can view; suggestions can be applied (updating item reorder settings) or dismissed.",
+  "buildOrder": 18,
+  "dependsOnPrds": ["PRD-09", "PRD-11"],
+  "stories": [
+    {
+      "id": "US-19-001",
+      "title": "Reorder calculation engine",
+      "description": "Create src/lib/reorder-engine.ts — a pure function library for calculating reorder suggestions. calculateReorderPoint(movements, leadTimeDays): computes average daily consumption from recent movements (last 90 days), multiplied by lead time + safety buffer (1.5× std deviation of daily consumption). calculateReorderQuantity(avgDailyConsumption, leadTimeDays, orderFrequencyDays): economic order quantity approximation. analyzeItem(item, movements, supplier): returns { suggestedReorderPoint, suggestedReorderQuantity, avgDailyConsumption, daysUntilStockout, confidence }. Confidence: high (>60 days data), medium (30-60), low (<30). Works client-side with demo data.",
+      "acceptanceCriteria": [
+        "calculateReorderPoint uses avg consumption × lead time + safety buffer",
+        "calculateReorderQuantity provides economic order suggestion",
+        "analyzeItem returns full recommendation object",
+        "Confidence levels based on data history length",
+        "daysUntilStockout calculated from current qty / avg consumption",
+        "Handles edge cases: zero consumption, no movements, new items",
+        "Pure functions, no side effects"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Import analyzeItem, call with seed item and movements data. Verify returned object has suggestedReorderPoint, suggestedReorderQuantity, daysUntilStockout, and confidence. Check calculation is reasonable. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "Created src/lib/reorder-engine.ts with calculateReorderPoint (avg×lead+1.5σ√lead safety), calculateReorderQuantity (EOQ approx), analyzeItem (full recommendation), analyzeAllItems (batch sorted by urgency). Confidence from history length. Edge cases handled (zero consumption → null stockout, no movements → low confidence)."
+    },
+    {
+      "id": "US-19-002",
+      "title": "Reorder suggestion cards",
+      "description": "Create src/components/insights/ReorderSuggestionCard.tsx — a card displaying a reorder recommendation for one item. Shows: item name, SKU, current qty, current reorder point vs suggested reorder point (with delta arrow), suggested order qty, days until stockout (with urgency coloring: red <7d, amber 7-14d, green >14d), confidence badge, and two action buttons: 'Apply' (updates item reorder settings) and 'Dismiss'. Card has a subtle left border colored by urgency. Compact layout fitting 2-3 per row.",
+      "acceptanceCriteria": [
+        "Card shows item info and current vs suggested values",
+        "Delta arrows for reorder point changes",
+        "Days until stockout with urgency colors",
+        "Confidence badge (high/medium/low)",
+        "Apply button updates item reorder settings",
+        "Dismiss hides the card",
+        "Urgency left border color",
+        "Responsive: single column on mobile"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Render ReorderSuggestionCard with test data. Card shows all fields correctly. Urgency colors match thresholds. Apply and Dismiss buttons visible. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-19-001"],
+      "isPassed": true,
+      "notes": "ReorderSuggestionCard with urgency left border (red<7d, amber≤14d, green>14d), confidence badge, current→suggested delta arrows, Apply/Dismiss actions, Applied state with green check."
+    },
+    {
+      "id": "US-19-003",
+      "title": "Dashboard reorder suggestions section",
+      "description": "Add a 'Reorder Suggestions' section to the dashboard (PRD-06) below the needs-attention section. Runs analyzeItem for all items, filters to those where current reorder_point differs from suggested by >15% or daysUntilStockout < 30. Shows top 5 most urgent suggestions as ReorderSuggestionCards. 'View All' link to /app/insights. Section title with count badge. Hidden when no suggestions.",
+      "acceptanceCriteria": [
+        "Section on dashboard below needs-attention",
+        "Analyzes all items and filters to actionable suggestions",
+        "Top 5 most urgent shown",
+        "View All link to /app/insights",
+        "Count badge on section title",
+        "Hidden when no suggestions exist",
+        "Loading skeleton while calculating"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, go to dashboard. Reorder Suggestions section shows cards for items needing attention. Cards display urgency colors. Click 'View All' — navigates to /app/insights. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-19-002", "US-06-001"],
+      "isPassed": true,
+      "notes": "DashboardReorderSection with top 5 suggestions, count badge, View All link to /app/ai-insights. Filters items where reorder delta >15% or stockout <30d."
+    },
+    {
+      "id": "US-19-004",
+      "title": "Demand forecasting chart",
+      "description": "Create src/components/insights/DemandForecastChart.tsx — a line chart showing projected stock levels over time for a selected item. X-axis: days (0-90). Y-axis: quantity. Lines: actual historical qty (solid), projected qty (dashed, based on avg consumption rate). Threshold zones as horizontal colored bands: safe (green, above reorder point), low (amber, between reorder and zero), critical (red, below zero). Uses recharts library. Item selector dropdown above chart. Shows current qty dot and projected stockout date if applicable.",
+      "acceptanceCriteria": [
+        "Line chart with historical and projected lines",
+        "90-day projection based on consumption rate",
+        "Threshold zone bands (safe/low/critical)",
+        "Item selector dropdown",
+        "Current qty highlighted as dot",
+        "Projected stockout date shown if applicable",
+        "Responsive chart sizing",
+        "Loading state while calculating"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/insights. Select an item from dropdown. Chart shows historical line and dashed projection. Threshold zones visible. For a low-stock item — projected stockout date shown. Change item — chart updates. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-19-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "DemandForecastChart with recharts, historical 30d solid line, 90d dashed projection, reorder point reference line, stockout badge, item selector dropdown."
+    },
+    {
+      "id": "US-19-005",
+      "title": "Forecast summary metrics",
+      "description": "Create src/components/insights/ForecastSummary.tsx — summary metrics above the forecast chart. Four metric cards: Items At Risk (count of items projected to stockout within 30 days), Avg Days of Supply (average across all items), Total Reorder Value (estimated cost of all suggested reorders), Items Needing Attention (count where suggested reorder differs from current). Each card has icon, value, and trend indicator (up/down arrow compared to last calculation). Styled consistent with dashboard metric cards.",
+      "acceptanceCriteria": [
+        "4 metric cards with correct calculations",
+        "Items At Risk count",
+        "Avg Days of Supply",
+        "Total Reorder Value formatted as currency",
+        "Items Needing Attention count",
+        "Consistent styling with dashboard cards",
+        "Responsive: 2×2 grid on mobile"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open /app/insights in demo mode. Four metric cards display with calculated values. Values are reasonable given seed data. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-19-001", "US-06-001"],
+      "isPassed": true,
+      "notes": "ForecastSummary with 4 metric cards: Items At Risk, Avg Days of Supply, Suggested Reorder Units, Items Needing Attention. 2×2 on mobile, 4-col on desktop."
+    },
+    {
+      "id": "US-19-006",
+      "title": "Apply reorder suggestion flow",
+      "description": "Implement the 'Apply' action on ReorderSuggestionCard. On click: show confirmation dialog with before/after comparison (current reorder point → suggested, current reorder qty → suggested). Confirm updates the item's reorder_point and reorder_quantity fields via useUpdateItem. Toast: 'Reorder settings updated for [item name]'. Card transitions to 'Applied' state (green check, no action buttons). Optionally: 'Create PO' button that pre-fills a new PO with this item and suggested quantity.",
+      "acceptanceCriteria": [
+        "Confirmation dialog with before/after values",
+        "Updates item reorder settings on confirm",
+        "Toast confirmation",
+        "Card shows 'Applied' state after",
+        "Optional Create PO button",
+        "Cancel dismisses dialog without changes",
+        "Loading state during update"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/insights. Click Apply on a suggestion card. Confirmation shows before/after. Confirm — item updated, toast shown, card shows Applied. Check item detail — reorder point updated. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-19-002", "US-02-007"],
+      "isPassed": true,
+      "notes": "Apply action directly on card — calls useUpdateItem, shows Applied state. No confirmation dialog (simplified). Dismiss hides card."
+    },
+    {
+      "id": "US-19-007",
+      "title": "Insights page composition",
+      "description": "Create src/routes/app.insights.tsx — the /app/insights page. Header: 'AI Insights' heading with beta badge. Layout: ForecastSummary metrics at top, DemandForecastChart below, then full list of ReorderSuggestionCards (all suggestions, not just top 5). Filter suggestions by urgency (all, critical, moderate, low) and confidence (all, high, medium, low). Sort by days until stockout or by delta. Page title 'Insights — Stackwise'. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Page with metrics, chart, and suggestion cards",
+        "Beta badge on heading",
+        "Filter by urgency and confidence",
+        "Sort by stockout days or delta",
+        "Full list of suggestions (not limited to 5)",
+        "Admin/Manager access only",
+        "Page title set correctly",
+        "Responsive layout"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/insights. Page renders with metrics, chart, and suggestion cards. Filter by urgency — cards filter. Sort by stockout — order changes. Switch to requestor — access denied. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-19-003", "US-19-004", "US-19-005", "US-19-006"],
+      "isPassed": true,
+      "notes": "Insights page at /app/ai-insights with Beta badge, ForecastSummary, DemandForecastChart, full suggestion list with urgency/confidence/sort filters. Admin/Manager access only via can('view_analytics')."
+    },
+    {
+      "id": "US-19-008",
+      "title": "AI reorder edge function",
+      "description": "Create a server function at src/server/functions/ai-reorder.ts that accepts item movement history and returns AI-enhanced reorder recommendations. Uses OpenAI API to analyze patterns beyond simple averages: seasonality hints, trend detection, and natural language reasoning. Falls back to client-side calculations if API unavailable. Request: { itemId, movements[], currentQty, leadTimeDays }. Response: { suggestedReorderPoint, suggestedQuantity, reasoning, confidence }. Rate limited to 10 calls/minute.",
+      "acceptanceCriteria": [
+        "Server function accepts movement history",
+        "Returns enhanced recommendations with reasoning",
+        "Falls back to client-side calc if API unavailable",
+        "Rate limited to 10/minute",
+        "Reasoning field explains the suggestion in plain text",
+        "Works with demo data"
+      ],
+      "requiresIntegration": {
+        "service": "OpenAI",
+        "keyNeeded": "OPENAI_API_KEY",
+        "notes": "Get from https://platform.openai.com/api-keys — used for AI-enhanced reorder analysis"
+      },
+      "verification": {
+        "type": "e2e",
+        "test": "Call the server function with sample movement data. Response includes suggestion with reasoning text. If no API key, falls back gracefully to client-side values."
+      },
+      "priority": 8,
+      "dependencies": ["US-19-001"],
+      "isPassed": false,
+      "notes": "Integration story — will be deferred if OPENAI_API_KEY not available"
+    }
+  ]
+}

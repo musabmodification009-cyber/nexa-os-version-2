@@ -1,0 +1,191 @@
+{
+  "prdId": "PRD-16",
+  "feature": "CSV Import/Export & Barcode",
+  "description": "Bulk data operations and barcode functionality for the inventory system. CSV export allows downloading items, suppliers, or movements as CSV files with current filters applied. CSV import provides a guided flow: upload file, map columns, validate data, preview, and confirm. Barcode display on item detail pages renders the item's barcode value as a scannable barcode image with a printable label option. Quick-entry mode provides a barcode scan/type input that instantly looks up an item and opens a quick movement form. Admin and Manager can import; all roles can export.",
+  "buildOrder": 15,
+  "dependsOnPrds": ["PRD-07", "PRD-09"],
+  "stories": [
+    {
+      "id": "US-16-001",
+      "title": "CSV export for items",
+      "description": "Create src/components/data/CSVExportButton.tsx — a reusable export button. For items: exports all currently filtered items as CSV with columns: Name, SKU, Barcode, Category, Supplier, Location, Quantity, Reorder Point, Unit Cost, Price, Status. Filename: stackwise-items-YYYY-MM-DD.csv. Uses Blob and URL.createObjectURL for client-side download. Button shows in catalog page header. Loading state while generating.",
+      "acceptanceCriteria": [
+        "Export button in catalog page header",
+        "Downloads CSV with all item columns",
+        "Respects current filters (exports filtered set)",
+        "Filename includes date",
+        "Client-side generation via Blob",
+        "Loading state during generation",
+        "Works with demo data",
+        "UTF-8 encoding with BOM for Excel compatibility"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode, /app/catalog. Click Export CSV. File downloads with correct name. Open CSV — contains all items with correct columns. Apply a filter, export again — only filtered items. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-07-001", "US-02-004"],
+      "isPassed": true,
+      "notes": "CSVExportButton generic component with Blob download, UTF-8 BOM, date-stamped filename. Wired into catalog header with all item columns. Respects filters."
+    },
+    {
+      "id": "US-16-002",
+      "title": "CSV export for suppliers and movements",
+      "description": "Extend CSVExportButton to support suppliers and movements. Suppliers CSV columns: Name, Contact Person, Email, Phone, Address, Payment Terms, Lead Time Days, Min Order Qty. Movements CSV columns: Date, Type, Item Name, SKU, Quantity, Performed By, Reference, Notes. Add export buttons to /app/suppliers and /app/movements page headers. Same Blob download pattern.",
+      "acceptanceCriteria": [
+        "Export button on suppliers page",
+        "Export button on movements page",
+        "Supplier CSV with correct columns",
+        "Movements CSV with correct columns",
+        "Respects current filters",
+        "Date-stamped filenames",
+        "Loading states"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Export suppliers CSV — correct columns. Export movements CSV — correct columns with dates. Apply filters, re-export — filtered data only. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-16-001", "US-10-001", "US-09-001"],
+      "isPassed": true,
+      "notes": "Export buttons added to suppliers and movements pages. Suppliers: 8 columns. Movements: 8 columns with date, type, item name, SKU. Both use filtered data and date-stamped filenames."
+    },
+    {
+      "id": "US-16-003",
+      "title": "CSV import — file upload and column mapping",
+      "description": "Create src/components/data/CSVImportSheet.tsx — a multi-step Sheet (600px) for importing items. Step 1: File upload (drag-and-drop or click, .csv only, max 5MB). Step 2: Column mapping — auto-detect columns by header names, show a mapping UI where user maps CSV columns to item fields (Name, SKU, Category, etc.). Required fields highlighted. Unmapped columns shown as 'Skip'. Uses FileReader API to parse CSV client-side. Admin/Manager only.",
+      "acceptanceCriteria": [
+        "Drag-and-drop file upload area",
+        "Accepts .csv only, max 5MB",
+        "Error for wrong file type or too large",
+        "Auto-detects column headers",
+        "Column mapping UI with dropdowns",
+        "Required fields (Name, SKU) highlighted",
+        "Unmapped columns default to Skip",
+        "Admin/Manager only",
+        "Step indicator showing progress"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open import sheet. Upload a CSV file. Column mapping step shows detected headers with mapping dropdowns. Required fields highlighted. Map columns. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-05-004"],
+      "isPassed": true,
+      "notes": "CSVImportSheet with drag-drop upload, .csv/5MB validation, auto-column-mapping, required field highlighting. Wired into catalog header for admin/manager."
+    },
+    {
+      "id": "US-16-004",
+      "title": "CSV import — validation and preview",
+      "description": "Add Step 3 to CSVImportSheet: validation and preview. After mapping, validate all rows: required fields present, SKU uniqueness (no duplicates in file or existing items), numeric fields valid, category/supplier names matched to existing records or flagged as new. Show preview table with first 20 rows. Error rows highlighted in red with specific error messages. Summary: X valid, Y errors, Z warnings. 'Import Valid Rows' button skips errors. 'Fix & Retry' option.",
+      "acceptanceCriteria": [
+        "Validates all rows after mapping",
+        "Checks required fields, SKU uniqueness, numeric validity",
+        "Preview table shows first 20 rows",
+        "Error rows highlighted with messages",
+        "Summary counts: valid, errors, warnings",
+        "Import Valid Rows skips errors",
+        "New categories/suppliers flagged as warnings",
+        "Responsive table on mobile"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Import CSV with some invalid rows (missing name, duplicate SKU). Validation step shows errors highlighted. Summary shows correct counts. Click Import Valid Rows — only valid rows imported. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-16-003", "US-02-004"],
+      "isPassed": true,
+      "notes": "Step 3 validation: required fields, SKU uniqueness, numeric checks, new category/supplier warnings. Preview table with first 20 rows, error highlighting, summary counts. Import Valid Rows skips errors."
+    },
+    {
+      "id": "US-16-005",
+      "title": "CSV import — execute and confirm",
+      "description": "Add Step 4 to CSVImportSheet: execution. On confirm, create items from valid rows using useCreateItem. Progress bar showing X of Y items created. Handle individual row failures gracefully (skip and log). On complete: summary dialog showing created count, skipped count, and any errors. Toast notification. Close sheet and refresh catalog. Create new categories/suppliers if they don't exist (with user opt-in from step 3).",
+      "acceptanceCriteria": [
+        "Progress bar during import",
+        "Items created via mutation hooks",
+        "Individual row failures don't block others",
+        "Completion summary with counts",
+        "New categories/suppliers auto-created if opted in",
+        "Toast notification on complete",
+        "Catalog refreshes after import",
+        "Loading state prevents double-submit"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Complete full import flow with valid CSV. Progress bar advances. Completion summary shows created count. Catalog now contains imported items. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-16-004", "US-02-007"],
+      "isPassed": true,
+      "notes": "Step 4 execution: progress bar with animated ticks, batch item creation via createItem.mutate, completion summary with created/failed counts, Done button closes sheet, catalog refreshes with imported items. Toast notification on complete."
+    },
+    {
+      "id": "US-16-006",
+      "title": "Barcode display on item detail",
+      "description": "Create src/components/catalog/BarcodeDisplay.tsx — renders an item's barcode value as a visual barcode image using an SVG-based Code128 renderer (no external library — implement a simple Code128B encoder). Shows the barcode image and the value text below. If no barcode value, shows 'No barcode assigned' with an 'Add Barcode' button that opens inline editing. Sized for label printing (2.5in × 1in at 96dpi).",
+      "acceptanceCriteria": [
+        "Renders Code128B barcode as SVG",
+        "Barcode value text below image",
+        "No barcode: 'No barcode assigned' + Add button",
+        "Sized for label printing",
+        "Inline edit for adding/changing barcode value",
+        "Renders in item detail sheet (PRD-08)"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open an item detail with a barcode value. Barcode SVG renders correctly with value text. Open item without barcode — shows empty state with Add button. No console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-08-001"],
+      "isPassed": true,
+      "notes": "Code128B SVG encoder implemented from scratch. Items have optional barcode field. BarcodeDisplay shows SVG barcode with value text, empty state with Add button, inline edit via pencil icon, Print Label button. Sized for 2.5x1in labels."
+    },
+    {
+      "id": "US-16-007",
+      "title": "Printable barcode labels",
+      "description": "Create src/components/catalog/PrintBarcodeLabel.tsx — a print button in the item detail sheet next to the barcode display. Uses window.print() with @media print CSS. Label layout: item name (truncated to 1 line), SKU, barcode image, barcode value. Optimized for 2.5in × 1in label printers. Hides all app chrome. Support printing multiple labels: in catalog bulk select, add 'Print Labels' action that prints selected items' labels (one per page/label).",
+      "acceptanceCriteria": [
+        "Print button next to barcode display",
+        "window.print() with print CSS",
+        "Label: name, SKU, barcode, value",
+        "2.5in × 1in label size",
+        "App chrome hidden in print",
+        "Bulk print from catalog selection",
+        "One label per item"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open item detail. Click Print Label — print preview shows formatted label. Close. In catalog, select 3 items, click Print Labels — preview shows 3 labels. No console errors."
+      },
+      "priority": 7,
+      "dependencies": ["US-16-006", "US-08-004"],
+      "isPassed": true,
+      "notes": "PrintBarcodeLabel with @page 2.5x1in sizing, Code128B SVG barcodes. Bulk print from catalog selection via BulkActionBar. Print Label button in item detail."
+    },
+    {
+      "id": "US-16-008",
+      "title": "Quick-entry barcode mode",
+      "description": "Create src/components/data/QuickEntryMode.tsx — accessible via a 'Quick Entry' button in the app header or movements page. Opens a focused overlay/sheet with a single large text input for barcode scanning/typing. On enter/scan: look up item by barcode value. If found: show item name, SKU, current qty, and a compact movement form (type select, quantity, notes). Submit logs the movement and clears for next scan. If not found: 'Item not found' error with the scanned value. Auto-focus input after each scan. ESC to close.",
+      "acceptanceCriteria": [
+        "Large focused barcode input",
+        "Lookup by barcode on enter",
+        "Found: shows item info + compact movement form",
+        "Not found: error message with scanned value",
+        "Submit logs movement and clears input",
+        "Auto-focus after each operation",
+        "ESC to close",
+        "Accessible from header or movements page",
+        "Admin/Manager only"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Open Quick Entry. Type a valid barcode from seed data, press Enter — item shown with movement form. Log a movement — cleared for next scan. Type invalid barcode — error shown. Press ESC — closes. No console errors."
+      },
+      "priority": 8,
+      "dependencies": ["US-09-003", "US-02-004", "US-05-004"],
+      "isPassed": true,
+      "notes": "QuickEntryMode component in header. Large barcode/SKU input, item lookup, compact movement form with type/qty/notes. Auto-clears and refocuses after submit. Not-found error state. ESC to close. Admin/Manager only via PermissionGate."
+    }
+  ]
+}

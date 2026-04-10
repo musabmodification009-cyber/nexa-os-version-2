@@ -1,0 +1,97 @@
+{
+  "prdId": "PRD-03",
+  "feature": "Landing Page",
+  "description": "A marketing-quality landing page at the root route (/) that serves as the entry point for Stackwise. Features a bold hero section with the Stackwise wordmark, tagline ('Your inventory command center'), and an animated stock health visualization showing live-looking metric counters. Two prominent CTAs: 'Try Demo' (amber accent, triggers demo mode and navigates to /app/dashboard) and 'Sign In' (outline, navigates to /login). Below the fold, a feature highlights grid showcasing 6 key capabilities (real-time tracking, smart reorders, supplier management, barcode scanning, analytics, team roles) with icons and short descriptions. Footer with minimal branding. The page must feel premium and immediately communicate what the product does.",
+  "buildOrder": 3,
+  "dependsOnPrds": ["PRD-01"],
+  "stories": [
+    {
+      "id": "US-03-001",
+      "title": "Landing page hero section",
+      "description": "Replace the placeholder in src/routes/index.tsx with the Stackwise landing page. Hero section takes full viewport height with warm off-white background. Centered content: Stackwise wordmark in large semibold Geist Sans (48px desktop, 32px mobile), tagline 'Your inventory command center' in muted text below, then two CTA buttons side by side — 'Try Demo' (solid amber accent, calls enterDemoMode and navigates to /app/dashboard) and 'Sign In' (outline teal, navigates to /login which can be a stub for now). Add a subtle animated element: 4 small metric cards floating/fading in below the CTAs showing sample numbers (e.g., '847 Items Tracked', '12 Low Stock', '3 On Order', '99.2% Accuracy') with a staggered fade-in animation using CSS keyframes.",
+      "acceptanceCriteria": [
+        "Hero section fills viewport height",
+        "Stackwise wordmark renders at 48px desktop, 32px mobile",
+        "Tagline in muted foreground color below wordmark",
+        "'Try Demo' button uses amber accent, triggers demo mode + navigates to /app/dashboard",
+        "'Sign In' button uses outline teal style, navigates to /login",
+        "4 floating metric cards animate in with staggered delay",
+        "All colors use semantic tokens",
+        "Responsive: buttons stack vertically on mobile (< 640px)",
+        "Page has proper meta title 'Stackwise — Inventory Command Center'"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Open /. Hero should fill viewport. Wordmark 'Stackwise' visible. Tagline visible. Two buttons visible. Click 'Try Demo' — should navigate to /app/dashboard with demo mode active (banner visible). Navigate back to /. Resize to 390px — buttons should stack vertically, wordmark should be smaller. Zero console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-01-001", "US-01-002", "US-02-006"],
+      "isPassed": true,
+      "notes": "Hero with 48/32px wordmark, staggered metric cards, amber Try Demo + outline Sign In."
+    },
+    {
+      "id": "US-03-002",
+      "title": "Feature highlights grid",
+      "description": "Below the hero section, add a feature highlights grid with a section heading 'Everything you need to manage inventory' in centered text. 6 feature cards in a 3x2 grid (desktop) / single column (mobile). Each card has: a Lucide icon (teal), a title, and a 1-sentence description. Features: 1) Real-Time Tracking (BarChart3 icon), 2) Smart Reorder Alerts (Bell icon), 3) Supplier Management (Truck icon), 4) Barcode Scanning (ScanLine icon), 5) Analytics & Reports (TrendingUp icon), 6) Team Roles & Permissions (Users icon). Cards use surface background, 1px border, 6px radius per design guidelines. Section has 80px vertical padding.",
+      "acceptanceCriteria": [
+        "Section heading centered above grid",
+        "6 cards in 3-column grid on desktop (≥ 1024px)",
+        "2-column grid on tablet (640-1023px)",
+        "Single column stacked on mobile (< 640px)",
+        "Each card has Lucide icon, title, description",
+        "Cards use surface bg, 1px border, 6px radius",
+        "Icons use primary teal color",
+        "80px vertical padding on section"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open /. Scroll below hero. 6 feature cards visible in 3x2 grid. Each has an icon, title, and description. Resize to 390px — cards stack to single column. All icons render in teal. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-03-001"],
+      "isPassed": true,
+      "notes": "3-col / 2-col / 1-col responsive grid with 6 Lucide icon cards."
+    },
+    {
+      "id": "US-03-003",
+      "title": "Landing page footer",
+      "description": "Add a simple footer at the bottom of the landing page. Contains: 'Built with Stackwise' text in muted color, current year, and a subtle separator line above. Centered layout, 40px vertical padding. Keep it minimal — this is a template, not a full marketing site.",
+      "acceptanceCriteria": [
+        "Footer at bottom of page below feature grid",
+        "Separator line above using border token",
+        "'Built with Stackwise' text in muted foreground",
+        "Current year displayed dynamically",
+        "Centered, 40px padding",
+        "Under 30 lines of code"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open /. Scroll to bottom. Footer visible with separator line, 'Built with Stackwise' text, and current year. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-03-002"],
+      "isPassed": true,
+      "notes": "Minimal footer with border-t separator and dynamic year."
+    },
+    {
+      "id": "US-03-004",
+      "title": "Landing page SEO and meta tags",
+      "description": "Update the route's head config (or the root __root.tsx meta) so that when on /, the page title is 'Stackwise — Inventory Command Center', meta description is 'Real-time inventory management for businesses of any size. Track stock, manage suppliers, automate reorders, and keep your team aligned.', and OG tags are updated accordingly. Add a single H1 tag for the wordmark.",
+      "acceptanceCriteria": [
+        "Page title: 'Stackwise — Inventory Command Center'",
+        "Meta description under 160 chars, keyword-rich",
+        "OG title and description match",
+        "Single H1 element on the page (the wordmark)",
+        "Semantic HTML: section, header elements used appropriately"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Open /. Check document.title — should be 'Stackwise — Inventory Command Center'. Inspect meta tags — description should be present. Only one H1 on page. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-03-001"],
+      "isPassed": true,
+      "notes": "Route-level head config with title, description, OG tags. Single H1 for wordmark."
+    }
+  ]
+}

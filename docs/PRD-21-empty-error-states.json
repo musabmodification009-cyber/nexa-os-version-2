@@ -1,0 +1,141 @@
+{
+  "prdId": "PRD-21",
+  "feature": "Empty States, Error States & Edge Cases",
+  "description": "Comprehensive empty state illustrations and CTAs for every list view in the app, error boundaries for graceful crash recovery, retry mechanisms for failed async operations, and proper handling of deleted references (e.g., an item referencing a deleted supplier). Each empty state has a contextual illustration, descriptive text, and a primary action CTA. Error boundaries catch component-level crashes and offer retry/reload options. All async operations have explicit error states with retry buttons.",
+  "buildOrder": 20,
+  "dependsOnPrds": ["PRD-07", "PRD-09", "PRD-10", "PRD-11", "PRD-13"],
+  "stories": [
+    {
+      "id": "US-21-001",
+      "title": "Empty state component",
+      "description": "Create src/components/shared/EmptyState.tsx — a reusable empty state component. Props: icon (lucide-react icon component), title (string), description (string), actionLabel (optional string), onAction (optional callback), secondaryActionLabel (optional), onSecondaryAction (optional). Layout: centered vertically and horizontally, icon at 48px in muted color, title in semibold, description in muted text, primary action as teal button, secondary as ghost button. Responsive padding.",
+      "acceptanceCriteria": [
+        "Reusable component with icon, title, description, actions",
+        "Centered layout vertically and horizontally",
+        "Icon 48px in muted color",
+        "Primary action as teal button",
+        "Secondary action as ghost button",
+        "Actions optional — component works without them",
+        "Responsive padding on mobile"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Render EmptyState with all props. Layout centered, icon muted, buttons styled correctly. Render without actions — no buttons shown. No console errors."
+      },
+      "priority": 1,
+      "dependencies": [],
+      "isPassed": true,
+      "notes": "EmptyState component with icon, title, description, optional primary/secondary actions. Centered layout, muted icon."
+    },
+    {
+      "id": "US-21-002",
+      "title": "Empty states for all list views",
+      "description": "Add contextual empty states to every list view: Catalog ('No items in your inventory yet' + 'Add First Item' CTA), Movements ('No stock movements recorded' + 'Log Movement'), Suppliers ('No suppliers added yet' + 'Add Supplier'), Purchase Orders ('No purchase orders created' + 'Create PO'), Requests ('No requests submitted' + 'New Request'), Locations ('No locations configured' + 'Add Location'). Each uses EmptyState with a relevant lucide icon (Package, ArrowUpDown, Truck, ClipboardList, FileText, MapPin). CTAs trigger the respective create form.",
+      "acceptanceCriteria": [
+        "Catalog empty state with Package icon and Add Item CTA",
+        "Movements empty state with ArrowUpDown icon",
+        "Suppliers empty state with Truck icon",
+        "Purchase Orders empty state with ClipboardList icon",
+        "Requests empty state with FileText icon",
+        "Locations empty state with MapPin icon",
+        "Each CTA opens the relevant create form",
+        "Empty states shown when data array is empty"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Clear all items from demo store (or test with empty filter that returns 0 results). Each page shows its empty state with correct icon and CTA. Click CTA — form opens. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-21-001", "US-07-001", "US-09-001", "US-10-001", "US-11-001", "US-13-002"],
+      "isPassed": true,
+      "notes": "All 6 list views have contextual empty states with relevant icons and CTAs: Catalog (Package), Movements (ArrowUpDown), Suppliers (Truck), POs (ClipboardList), Requests (FileText), Locations (MapPin)."
+    },
+    {
+      "id": "US-21-003",
+      "title": "Error boundary component",
+      "description": "Create src/components/shared/ErrorBoundary.tsx — a React error boundary class component. Catches rendering errors in children. Displays a friendly error UI: warning icon, 'Something went wrong' title, error message (in dev mode only), 'Try Again' button (resets error state), 'Reload Page' button (window.location.reload). Logs error to console. Wraps each major page section independently so one crash doesn't take down the whole page.",
+      "acceptanceCriteria": [
+        "React error boundary class component",
+        "Catches child rendering errors",
+        "Friendly error UI with icon and message",
+        "Error details shown in dev mode only",
+        "Try Again resets error boundary state",
+        "Reload Page refreshes browser",
+        "Logs error to console",
+        "Styled consistently with app design"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Wrap a component that throws in ErrorBoundary. Error UI renders with Try Again and Reload buttons. Click Try Again — re-renders (may throw again in test). Error logged to console. No unhandled crash."
+      },
+      "priority": 3,
+      "dependencies": [],
+      "isPassed": true,
+      "notes": "ErrorBoundary class component with Try Again/Reload Page. Dev-only error details. Console logging."
+    },
+    {
+      "id": "US-21-004",
+      "title": "Wrap pages in error boundaries",
+      "description": "Add ErrorBoundary wrappers to all major page components: Dashboard (wrap metric cards, activity feed, suggestions separately), Catalog (wrap table, detail sheet separately), Movements, Suppliers, Purchase Orders, Requests, Locations, Insights. Each section wrapped independently so a crash in one section doesn't affect others. Add ErrorBoundary at the route level in __root.tsx as a top-level catch-all.",
+      "acceptanceCriteria": [
+        "Each page has section-level error boundaries",
+        "Dashboard: metrics, feed, suggestions wrapped separately",
+        "Catalog: table and detail wrapped separately",
+        "Top-level error boundary in root",
+        "Section crash shows error UI, rest of page works",
+        "No uncaught errors reach the browser"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Verify ErrorBoundary components are present in page source. In dev tools, simulate an error in a wrapped component — error UI shows in that section, other sections still render. No console errors beyond the caught one."
+      },
+      "priority": 4,
+      "dependencies": ["US-21-003"],
+      "isPassed": true,
+      "notes": "ErrorBoundary wraps each page's table/content sections independently. Top-level boundary in __root.tsx."
+    },
+    {
+      "id": "US-21-005",
+      "title": "Async error states with retry",
+      "description": "Create src/components/shared/AsyncErrorState.tsx — shown when a data fetch or mutation fails. Props: error (Error object), onRetry (callback), compact (boolean for inline vs full-width). Full mode: centered layout with alert icon, 'Failed to load data' title, error message, Retry button. Compact mode: inline red text with retry link. Add to all data-fetching components: if useQuery hook returns error, show AsyncErrorState instead of data. Retry re-triggers the query.",
+      "acceptanceCriteria": [
+        "Full and compact error display modes",
+        "Shows error message from Error object",
+        "Retry button re-triggers data fetch",
+        "Used in all data-fetching components",
+        "Full mode: centered with icon",
+        "Compact mode: inline red text with retry link",
+        "Styled with error color token"
+      ],
+      "verification": {
+        "type": "console-check",
+        "test": "Simulate a data fetch error (e.g., throw in demo store query). AsyncErrorState renders with error message and Retry button. Click Retry — re-fetches. No console errors beyond the simulated one."
+      },
+      "priority": 5,
+      "dependencies": ["US-02-004"],
+      "isPassed": true,
+      "notes": "AsyncErrorState with full/compact modes, error message display, retry button."
+    },
+    {
+      "id": "US-21-006",
+      "title": "Deleted reference handling",
+      "description": "Handle cases where referenced entities are deleted: items referencing a deleted supplier show 'Unknown Supplier' in gray italic instead of crashing. PO line items referencing deleted items show 'Deleted Item' with strikethrough. Movement history referencing deleted items shows '[Item Deleted]'. Supplier detail referencing deleted items filters them out. All foreign key references throughout the app gracefully handle null/missing references with appropriate fallback display.",
+      "acceptanceCriteria": [
+        "Deleted supplier shows 'Unknown Supplier' in gray italic",
+        "Deleted item in PO shows 'Deleted Item' with strikethrough",
+        "Deleted item in movements shows '[Item Deleted]'",
+        "No crashes when referenced entity is missing",
+        "Consistent fallback styling across app",
+        "Filters and counts exclude deleted references"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Enter demo mode. Delete a supplier that has linked items. Check those items — shows 'Unknown Supplier'. Delete an item that has movements — movements show '[Item Deleted]'. No crashes, no console errors."
+      },
+      "priority": 6,
+      "dependencies": ["US-07-001", "US-09-001", "US-10-001", "US-11-001"],
+      "isPassed": true,
+      "notes": "Deleted supplier shows 'Unknown Supplier' italic. Deleted item in PO shows 'Deleted Item' strikethrough. Movements show '[Item Deleted]'. Catalog shows 'Unknown Category/Location/Supplier'."
+    }
+  ]
+}

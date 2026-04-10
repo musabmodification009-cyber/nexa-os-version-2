@@ -1,0 +1,123 @@
+{
+  "prdId": "PRD-28",
+  "feature": "Onboarding & Help",
+  "description": "First-time user onboarding experience and contextual help system for Stackwise. Includes a multi-step onboarding tooltip tour that highlights key features on first login (dashboard metrics, sidebar navigation, catalog, command palette), a help documentation page at /app/help with searchable FAQ and feature guides, contextual help icons (?) on complex forms that show explanatory popovers, and a demo mode walkthrough overlay that guides new users through the core workflow (browse catalog → log movement → create PO). Onboarding state is persisted so it only shows once per user.",
+  "buildOrder": 27,
+  "dependsOnPrds": ["PRD-02", "PRD-06"],
+  "stories": [
+    {
+      "id": "US-28-001",
+      "title": "Onboarding tooltip tour engine",
+      "description": "Create src/components/onboarding/OnboardingTour.tsx — a reusable tooltip tour engine. Renders a sequence of positioned tooltip popovers that highlight specific DOM elements (via data-tour attributes). Each step has: target selector, title, description, position (top/bottom/left/right), and optional action button. Navigation: Next, Back, Skip Tour. Progress dots. Backdrop overlay dims everything except the highlighted element. Tour state stored in localStorage (demo) or user profile (auth). Create src/hooks/useOnboarding.ts to manage tour state (hasCompleted, currentStep, start, skip, complete).",
+      "acceptanceCriteria": [
+        "Tooltip positions itself relative to target element via data-tour attribute",
+        "Backdrop overlay dims page except highlighted element",
+        "Next/Back navigation between steps with progress dots",
+        "Skip Tour button dismisses and marks complete",
+        "Tour state persisted — does not show again after completion or skip",
+        "useOnboarding hook exposes hasCompleted, currentStep, startTour, skipTour",
+        "Handles missing target elements gracefully (skip step)",
+        "Mobile: tooltips reposition to avoid viewport overflow",
+        "Component under 200 lines, hook under 60 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Clear localStorage, enter demo mode. Tour starts automatically. Tooltip highlights first element with backdrop. Click Next — moves to step 2. Click Back — returns to step 1. Click Skip — tour dismissed. Re-enter demo — tour does not restart. No console errors."
+      },
+      "priority": 1,
+      "dependencies": ["US-02-003"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-28-002",
+      "title": "Dashboard onboarding tour steps",
+      "description": "Define the onboarding tour step sequence and add data-tour attributes to target elements. Steps: 1) Welcome — 'Welcome to Stackwise! Let's take a quick tour.' (no target, centered modal). 2) Sidebar — 'Navigate between sections here' (target: sidebar nav). 3) Metric Cards — 'Your stock health at a glance' (target: metric row). 4) Needs Attention — 'Items that need action appear here' (target: needs-attention section). 5) Command Palette — 'Press CMD+K to search anything' (target: header search). 6) Done — 'You're all set! Explore or try the demo walkthrough.' (no target, centered). Add data-tour='sidebar', data-tour='metrics', etc. to the relevant components.",
+      "acceptanceCriteria": [
+        "6 tour steps defined with titles, descriptions, and targets",
+        "data-tour attributes added to sidebar, metric row, needs-attention, header search",
+        "Step 1 and 6 are centered modals (no target highlight)",
+        "Steps 2-5 highlight specific UI sections",
+        "Tour auto-starts on first demo mode entry to dashboard",
+        "Completing tour shows success toast"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Clear localStorage, enter demo mode. Tour starts on dashboard. Step 1: welcome modal. Click Next — sidebar highlighted. Next — metric cards highlighted. Next — needs attention. Next — search bar. Next — completion modal. Click Done — toast shown, tour complete. No console errors."
+      },
+      "priority": 2,
+      "dependencies": ["US-28-001", "US-06-007"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-28-003",
+      "title": "Help page with FAQ",
+      "description": "Create src/routes/app.help.tsx at /app/help. Page has a search input at top and an accordion-based FAQ section. FAQ categories: Getting Started (5 items), Inventory Management (5 items), Purchase Orders (4 items), Reports & Analytics (3 items), Account & Settings (3 items). Each FAQ item has a question and a markdown-formatted answer. Search filters FAQ items by question text (case-insensitive). Empty search state: 'No matching questions'. Add Help to sidebar nav under System group (visible to all roles).",
+      "acceptanceCriteria": [
+        "Route /app/help renders with 'Help Center' heading",
+        "Search input filters FAQ by question text",
+        "5 FAQ categories with accordion sections",
+        "20 total FAQ items with formatted answers",
+        "Empty search state message",
+        "Sidebar nav item under System group, all roles",
+        "Mobile: full-width stacked layout",
+        "Component under 250 lines (FAQ data can be in separate file)"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to /app/help. FAQ sections visible as accordions. Expand a question — answer shown. Type in search — questions filtered. Clear search — all restored. Search nonsense — empty state shown. Check sidebar — Help item visible. No console errors."
+      },
+      "priority": 3,
+      "dependencies": ["US-01-004"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-28-004",
+      "title": "Contextual help icons on forms",
+      "description": "Create src/components/shared/HelpTooltip.tsx — a small (?) icon button that shows a popover with help text on click (mobile) or hover (desktop). Add help tooltips to complex form fields across the app: SKU field ('Unique identifier for this item'), Reorder Point ('Minimum quantity before restock alert'), Lead Time ('Average days from order to delivery'), Safety Stock Multiplier ('Buffer factor for demand variability'), Custom Fields ('Additional data fields defined in Settings'). Use shadcn Popover with max-width 250px.",
+      "acceptanceCriteria": [
+        "HelpTooltip renders (?) icon next to form label",
+        "Desktop: popover on hover with help text",
+        "Mobile: popover on tap, dismissible",
+        "Max-width 250px, clean typography",
+        "Applied to: SKU, reorder point, lead time, safety multiplier, custom fields",
+        "Icon is subtle (muted color) and doesn't disrupt form layout",
+        "Component under 40 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "Navigate to catalog, open new item form. (?) icon visible next to SKU field. Hover — popover with help text. Go to settings reorder defaults — (?) icons on numeric fields with explanations. At 390px, tap (?) — popover appears. Tap elsewhere — dismisses. No console errors."
+      },
+      "priority": 4,
+      "dependencies": ["US-07-004", "US-22-005"],
+      "isPassed": false,
+      "notes": ""
+    },
+    {
+      "id": "US-28-005",
+      "title": "Demo walkthrough overlay",
+      "description": "Create src/components/onboarding/DemoWalkthrough.tsx — an interactive guided walkthrough for demo mode that walks users through the core workflow: 1) Browse catalog and view an item, 2) Log a stock movement, 3) Check low-stock items on dashboard, 4) Create a purchase order. Each step shows an instruction panel (fixed bottom-right, 300px wide) with step number, instruction text, and a 'Show me' button that navigates to the relevant page. Progress bar at top of panel. Triggered from a 'Start Walkthrough' button on the dashboard or from the onboarding tour completion.",
+      "acceptanceCriteria": [
+        "Floating instruction panel (bottom-right, 300px) with step info",
+        "4 workflow steps with clear instructions",
+        "'Show me' button navigates to relevant page for each step",
+        "Progress bar shows completion",
+        "Minimize/close buttons on panel",
+        "Triggered from dashboard button or tour completion",
+        "Panel does not block primary content",
+        "Mobile: panel becomes bottom sheet (full width, 120px tall)",
+        "Component under 180 lines"
+      ],
+      "verification": {
+        "type": "e2e",
+        "test": "In demo mode, click 'Start Walkthrough' on dashboard. Instruction panel appears bottom-right. Step 1 says browse catalog — click 'Show me' — navigates to catalog. Panel shows step 2. Progress bar advances. Click close — panel dismissed. At 390px — panel is bottom sheet. No console errors."
+      },
+      "priority": 5,
+      "dependencies": ["US-28-002", "US-06-007"],
+      "isPassed": false,
+      "notes": ""
+    }
+  ]
+}

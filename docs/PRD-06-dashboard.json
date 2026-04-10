@@ -1,0 +1,14 @@
+{
+  "prdId": "PRD-06",
+  "feature": "Dashboard",
+  "buildOrder": 6,
+  "stories": [
+    { "id": "US-06-001", "title": "MetricCard shared component", "isPassed": true, "notes": "Mono font 32px, accent left border, optional trend arrow." },
+    { "id": "US-06-002", "title": "Dashboard metric cards row", "isPassed": true, "notes": "4 cards: total=35, inStock=20, low=10, out=5 from seed data." },
+    { "id": "US-06-003", "title": "Needs Attention section", "isPassed": true, "notes": "Low stock list (max 5), out of stock, pending POs. CheckCircle empty state." },
+    { "id": "US-06-004", "title": "ActivityItem shared component", "isPassed": true, "notes": "Icons per movement type, +/- color, relative timestamp via date-fns." },
+    { "id": "US-06-005", "title": "Recent activity feed", "isPassed": true, "notes": "20 recent movements, scrollable, dividers, View All link." },
+    { "id": "US-06-006", "title": "Dashboard quick search bar", "isPassed": true, "notes": "Instant filter dropdown, 8 max results, StatusBadge, No items found state." },
+    { "id": "US-06-007", "title": "Dashboard page layout composition", "isPassed": true, "notes": "60/40 two-column for attention+activity, responsive stacking, max-w-1400." }
+  ]
+}
