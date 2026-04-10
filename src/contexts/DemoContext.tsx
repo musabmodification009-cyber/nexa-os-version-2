@@ -1,15 +1,21 @@
 import { createContext, useCallback, useMemo, useState, type ReactNode } from "react";
 import { DemoStore } from "@/lib/demo-store";
 
+export interface OnboardingSelection {
+  businessType: string | null;
+  categories: string[];
+}
+
 export interface DemoContextValue {
   isDemo: boolean;
   demoStore: DemoStore | null;
-  enterDemoMode: () => void;
+  enterDemoMode: (onboarding?: OnboardingSelection) => void;
   exitDemoMode: () => void;
   resetDemoData: () => void;
   /** Increment after any store mutation to trigger re-renders */
   bumpVersion: () => void;
   version: number;
+  onboarding: OnboardingSelection;
 }
 
 export const DemoContext = createContext<DemoContextValue | null>(null);
