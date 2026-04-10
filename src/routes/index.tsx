@@ -518,5 +518,6 @@ function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
