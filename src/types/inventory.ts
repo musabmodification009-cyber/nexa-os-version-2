@@ -11,6 +11,8 @@ export interface SaleLineItem {
 
 export interface SaleTransaction {
   id: string;
+  customerName?: string;
+  customerPhone?: string;
   items: SaleLineItem[];
   totalNgn: number;
   createdAt: string;
