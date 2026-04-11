@@ -280,7 +280,7 @@ export function SalesReceipt({ sale, onClose }: SalesReceiptProps) {
                   variant="outline"
                   size="sm"
                   onClick={handleWhatsAppText}
-                  className="gap-1.5 border-green-600/30 text-green-600 hover:bg-green-600/10 hover:text-green-600"
+                  className="gap-1.5"
                 >
                   <MessageCircle className="h-3.5 w-3.5" /> Text
                 </Button>
@@ -288,7 +288,7 @@ export function SalesReceipt({ sale, onClose }: SalesReceiptProps) {
                   variant="outline"
                   size="sm"
                   onClick={handleWhatsAppPDF}
-                  className="gap-1.5 border-green-600/30 text-green-600 hover:bg-green-600/10 hover:text-green-600"
+                  className="gap-1.5"
                 >
                   <FileText className="h-3.5 w-3.5" /> PDF + Text
                 </Button>
