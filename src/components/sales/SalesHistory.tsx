@@ -101,6 +101,7 @@ export function SalesHistoryPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
+                <TableHead>Customer</TableHead>
                 <TableHead>Items</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Total</TableHead>
@@ -111,6 +112,14 @@ export function SalesHistoryPage() {
                 <TableRow key={sale.id}>
                   <TableCell className="text-sm">
                     {format(new Date(sale.createdAt), "dd MMM yyyy, HH:mm")}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{sale.customerName || "Walk-in"}</span>
+                      {sale.customerPhone && (
+                        <span className="text-[11px] text-muted-foreground font-mono">{sale.customerPhone}</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
