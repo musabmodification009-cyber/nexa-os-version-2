@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { StockStatusDonut, CategoryDonut } from "@/components/dashboard/StockDonutChart";
 import { DashboardReorderSection } from "@/components/insights/DashboardReorderSection";
 import { DashboardAnomalySection } from "@/components/insights/DashboardAnomalySection";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
@@ -38,9 +39,7 @@ function DashboardPage() {
   const suppliers = demoStore?.getSuppliers() ?? [];
 
   const tour = useOnboarding("dashboard");
-  
 
-  // Auto-start tour on first demo visit
   useEffect(() => {
     if (isDemo && !tour.hasCompleted) {
       const timer = setTimeout(() => tour.startTour(), 500);
@@ -70,7 +69,6 @@ function DashboardPage() {
         </p>
       </div>
 
-      {/* Onboarding categories */}
       {onboarding.categories.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-muted-foreground">Your categories:</span>
@@ -85,6 +83,7 @@ function DashboardPage() {
         </div>
       )}
 
+      {/* Metric cards row */}
       <div data-tour="metrics" className="rounded-xl border border-border bg-card p-3 shadow-xs">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
@@ -92,6 +91,12 @@ function DashboardPage() {
           <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
           <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
         </div>
+      </div>
+
+      {/* Donut charts */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <StockStatusDonut />
+        <CategoryDonut />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
@@ -111,8 +116,6 @@ function DashboardPage() {
         onSkip={tour.skipTour}
         onComplete={handleTourComplete}
       />
-
-      
     </div>
   );
 }
