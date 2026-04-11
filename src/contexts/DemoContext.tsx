@@ -4,9 +4,10 @@ import { DemoStore } from "@/lib/demo-store";
 export interface OnboardingSelection {
   businessType: string | null;
   categories: string[];
+  storeName: string;
 }
 
-const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [] };
+const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store" };
 
 export interface DemoContextValue {
   isDemo: boolean;

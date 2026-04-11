@@ -335,11 +335,12 @@ function LandingPage() {
     setShowOnboarding(true);
   };
 
-  const handleOnboardingComplete = (_businessType: string, _categories: string[]) => {
-    enterDemoMode({ businessType: _businessType, categories: _categories });
+  const handleOnboardingComplete = (_businessType: string, _categories: string[], _storeName: string) => {
+    enterDemoMode({ businessType: _businessType, categories: _categories, storeName: _storeName });
     localStorage.setItem("stackwise-onboarding-done", "true");
     localStorage.setItem("stackwise-business-type", _businessType);
     localStorage.setItem("stackwise-categories", JSON.stringify(_categories));
+    localStorage.setItem("stackwise-store-name", _storeName);
     setShowOnboarding(false);
     navigate({ to: "/app/dashboard" });
   };
