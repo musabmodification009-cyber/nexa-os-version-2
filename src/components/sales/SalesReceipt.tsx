@@ -131,7 +131,7 @@ interface SalesReceiptProps {
 
 export function SalesReceipt({ sale, onClose }: SalesReceiptProps) {
   const { onboarding } = useDemo();
-  const storeName = getStoreName(onboarding.businessType);
+  const storeName = onboarding.storeName || getStoreName(onboarding.businessType);
   const [downloading, setDownloading] = useState(false);
 
   const handlePrint = () => window.print();
