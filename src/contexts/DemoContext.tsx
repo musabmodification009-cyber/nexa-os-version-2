@@ -5,9 +5,13 @@ export interface OnboardingSelection {
   businessType: string | null;
   categories: string[];
   storeName: string;
+  storePhone: string;
+  storeAddress: string;
+  receiptFooter: string;
+  taxRate: number;
 }
 
-const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store" };
+const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store", storePhone: "", storeAddress: "", receiptFooter: "Thank you for your patronage!", taxRate: 0 };
 
 export interface DemoContextValue {
   isDemo: boolean;
@@ -18,6 +22,7 @@ export interface DemoContextValue {
   bumpVersion: () => void;
   version: number;
   onboarding: OnboardingSelection;
+  updateOnboarding: (updates: Partial<OnboardingSelection>) => void;
 }
 
 export const DemoContext = createContext<DemoContextValue | null>(null);
@@ -49,6 +54,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const bumpVersion = useCallback(() => setVersion((v) => v + 1), []);
 
+  const updateOnboarding = useCallback((updates: Partial<OnboardingSelection>) => {
+    setOnboarding((prev) => ({ ...prev, ...updates }));
+  }, []);
+
   const value = useMemo<DemoContextValue>(
     () => ({
       isDemo: store !== null,
@@ -59,8 +68,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       bumpVersion,
       version,
       onboarding,
+      updateOnboarding,
     }),
-    [store, enterDemoMode, exitDemoMode, resetDemoData, bumpVersion, version, onboarding],
+    [store, enterDemoMode, exitDemoMode, resetDemoData, bumpVersion, version, onboarding, updateOnboarding],
   );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
