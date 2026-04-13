@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown } from "lucide-react";
+import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
@@ -14,7 +14,11 @@ import { cn } from "@/lib/utils";
 import { useStockSummary } from "@/hooks/useInventoryData";
 import { useAlertGenerator } from "@/hooks/useStockAlertGenerator";
 import { useDemo } from "@/hooks/useDemo";
+import { useRole } from "@/hooks/useRole";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
+
+const NAIRA = "₦";
+const USD_TO_NGN = 1_580;
 
 const TOUR_STEPS: TourStep[] = [
   { title: "Welcome to Stackwise!", description: "Let's take a quick tour of the key features. This will only take a minute." },
@@ -62,12 +66,15 @@ export const Route = createFileRoute("/app/dashboard")({
 
 function DashboardPage() {
   const { data: summary } = useStockSummary();
-  const { demoStore, isDemo } = useDemo();
+  const { demoStore, isDemo, onboarding } = useDemo();
+  const { isAdmin, isManager } = useRole();
   useAlertGenerator();
 
   const items = demoStore?.getItems() ?? [];
   const movements = demoStore?.getMovements() ?? [];
   const suppliers = demoStore?.getSuppliers() ?? [];
+  const sales = demoStore?.getSales() ?? [];
+  const users = demoStore?.getUsers() ?? [];
 
   const tour = useOnboarding("dashboard");
   const [openSection, setOpenSection] = useState<string | null>("metrics");
@@ -88,26 +95,38 @@ function DashboardPage() {
     toast.success("Tour complete! Explore freely or start the walkthrough.");
   };
 
-  const { onboarding } = useDemo();
-
   const businessLabel = onboarding.businessType
     ? onboarding.businessType.charAt(0).toUpperCase() + onboarding.businessType.slice(1)
     : null;
 
+  // Sales metrics
+  const totalRevenue = sales.reduce((s, sale) => s + sale.totalNgn, 0);
+  const todaySales = sales.filter((s) => {
+    const d = new Date(s.createdAt);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  });
+  const todayRevenue = todaySales.reduce((s, sale) => s + sale.totalNgn, 0);
+  const uniqueCustomers = new Set(sales.filter((s) => s.customerPhone).map((s) => s.customerPhone)).size;
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-foreground">
+          {isAdmin ? "Admin Dashboard" : "Manager Dashboard"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          {businessLabel
-            ? `${businessLabel} inventory overview`
-            : "Welcome back — here's your inventory overview."}
+          {isAdmin
+            ? "Business overview, staff activity & system health"
+            : businessLabel
+              ? `${businessLabel} — sales targets & inventory alerts`
+              : "Welcome back — here's your overview."}
         </p>
       </div>
 
       {onboarding.categories.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Your categories:</span>
+          <span className="text-xs font-medium text-muted-foreground">Categories:</span>
           {onboarding.categories.map((cat) => (
             <span key={cat} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize">
               {cat.replace(/-/g, " ")}
@@ -116,37 +135,96 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* Accordion sections — only one open at a time */}
-      <AccordionSection id="metrics" title="Stock Health" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
-          <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
-          <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-          <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
-        </div>
-      </AccordionSection>
+      {/* ─── Admin Dashboard ─── */}
+      {isAdmin && (
+        <>
+          <AccordionSection id="metrics" title="Business Overview" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Total Revenue" value={`${NAIRA}${totalRevenue.toLocaleString("en-NG")}`} accentColor="healthy" icon={DollarSign} />
+              <MetricCard label="Total Transactions" value={sales.length} accentColor="neutral" icon={ShoppingCart} />
+              <MetricCard label="Active Staff" value={users.filter((u) => u.status === "active").length} accentColor="neutral" icon={Users} />
+              <MetricCard label="Unique Customers" value={uniqueCustomers} accentColor="neutral" icon={TrendingUp} />
+            </div>
+          </AccordionSection>
 
-      <AccordionSection id="charts" title="Stock Distribution" openSection={openSection} onToggle={toggleSection}>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <StockStatusDonut />
-          <CategoryDonut />
-        </div>
-      </AccordionSection>
+          <AccordionSection id="stock" title="Stock Health" openSection={openSection} onToggle={toggleSection}>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
+              <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
+              <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
+              <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
+            </div>
+          </AccordionSection>
 
-      <AccordionSection id="attention" title="Needs Attention & Activity" openSection={openSection} onToggle={toggleSection} dataTour="needs-attention">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
-          <div className="min-h-0"><NeedsAttention /></div>
-          <div className="min-h-0"><RecentActivity /></div>
-        </div>
-      </AccordionSection>
+          <AccordionSection id="charts" title="Stock Distribution" openSection={openSection} onToggle={toggleSection}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <StockStatusDonut />
+              <CategoryDonut />
+            </div>
+          </AccordionSection>
 
-      <AccordionSection id="anomalies" title="Anomaly Detection" openSection={openSection} onToggle={toggleSection}>
-        <DashboardAnomalySection movements={movements} items={items} />
-      </AccordionSection>
+          <AccordionSection id="attention" title="Staff Activity & Alerts" openSection={openSection} onToggle={toggleSection} dataTour="needs-attention">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+              <div className="min-h-0"><NeedsAttention /></div>
+              <div className="min-h-0"><RecentActivity /></div>
+            </div>
+          </AccordionSection>
 
-      <AccordionSection id="reorder" title="Reorder Suggestions" openSection={openSection} onToggle={toggleSection}>
-        <DashboardReorderSection items={items} movements={movements} suppliers={suppliers} />
-      </AccordionSection>
+          <AccordionSection id="anomalies" title="Anomaly Detection" openSection={openSection} onToggle={toggleSection}>
+            <DashboardAnomalySection movements={movements} items={items} />
+          </AccordionSection>
+
+          <AccordionSection id="reorder" title="Reorder Suggestions" openSection={openSection} onToggle={toggleSection}>
+            <DashboardReorderSection items={items} movements={movements} suppliers={suppliers} />
+          </AccordionSection>
+        </>
+      )}
+
+      {/* ─── Manager Dashboard ─── */}
+      {isManager && (
+        <>
+          <AccordionSection id="metrics" title="Today's Sales" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Today's Revenue" value={`${NAIRA}${todayRevenue.toLocaleString("en-NG")}`} accentColor="healthy" icon={DollarSign} />
+              <MetricCard label="Today's Orders" value={todaySales.length} accentColor="neutral" icon={ShoppingCart} />
+              <MetricCard label="Low Stock Items" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
+              <MetricCard label="Out of Stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
+            </div>
+          </AccordionSection>
+
+          <AccordionSection id="charts" title="Inventory Overview" openSection={openSection} onToggle={toggleSection}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <StockStatusDonut />
+              <CategoryDonut />
+            </div>
+          </AccordionSection>
+
+          <AccordionSection id="attention" title="Needs Attention" openSection={openSection} onToggle={toggleSection} dataTour="needs-attention">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+              <div className="min-h-0"><NeedsAttention /></div>
+              <div className="min-h-0"><RecentActivity /></div>
+            </div>
+          </AccordionSection>
+
+          <AccordionSection id="reorder" title="Reorder Suggestions" openSection={openSection} onToggle={toggleSection}>
+            <DashboardReorderSection items={items} movements={movements} suppliers={suppliers} />
+          </AccordionSection>
+        </>
+      )}
+
+      {/* ─── Requestor fallback ─── */}
+      {!isAdmin && !isManager && (
+        <>
+          <AccordionSection id="metrics" title="Stock Overview" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
+              <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
+              <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
+              <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
+            </div>
+          </AccordionSection>
+        </>
+      )}
 
       <OnboardingTour
         steps={TOUR_STEPS}
