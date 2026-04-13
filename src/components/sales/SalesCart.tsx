@@ -45,6 +45,26 @@ export function SalesCart({ open, onOpenChange, items, onAdd, onRemove, onClear 
   const [lastSale, setLastSale] = useState<SaleTransaction | null>(null);
   const total = items.reduce((s, ci) => s + ci.item.sellingPrice * USD_TO_NGN * ci.quantity, 0);
 
+  // Auto-suggest customer name from past sales
+  const knownCustomers = useMemo(() => {
+    const sales = demoStore?.getSales() ?? [];
+    const map = new Map<string, string>();
+    for (const sale of sales) {
+      if (sale.customerPhone && sale.customerName) {
+        map.set(sale.customerPhone, sale.customerName);
+      }
+    }
+    return map;
+  }, [demoStore]);
+
+  const handlePhoneChange = (value: string) => {
+    setCustomerPhone(value);
+    if (value.length >= 8) {
+      const found = knownCustomers.get(value);
+      if (found && !customerName) setCustomerName(found);
+    }
+  };
+
   const handleCheckout = () => {
     const sale: SaleTransaction = {
       id: `sale-${Date.now()}`,
@@ -161,7 +181,7 @@ export function SalesCart({ open, onOpenChange, items, onAdd, onRemove, onClear 
                       <Input
                         id="customer-phone"
                         value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
                         placeholder="08012345678"
                         className="h-9 pl-8 text-sm font-mono"
                       />
