@@ -4,7 +4,7 @@ type AccentColor = "healthy" | "warning" | "danger" | "neutral";
 
 interface MetricCardProps {
   label: string;
-  value: number;
+  value: number | string;
   trend?: { direction: "up" | "down"; percentage: number } | null;
   accentColor?: AccentColor;
   icon?: React.ComponentType<{ className?: string }>;
