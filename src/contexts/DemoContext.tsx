@@ -5,9 +5,13 @@ export interface OnboardingSelection {
   businessType: string | null;
   categories: string[];
   storeName: string;
+  storePhone: string;
+  storeAddress: string;
+  receiptFooter: string;
+  taxRate: number;
 }
 
-const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store" };
+const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store", storePhone: "", storeAddress: "", receiptFooter: "Thank you for your patronage!", taxRate: 0 };
 
 export interface DemoContextValue {
   isDemo: boolean;
@@ -18,6 +22,7 @@ export interface DemoContextValue {
   bumpVersion: () => void;
   version: number;
   onboarding: OnboardingSelection;
+  updateOnboarding: (updates: Partial<OnboardingSelection>) => void;
 }
 
 export const DemoContext = createContext<DemoContextValue | null>(null);
