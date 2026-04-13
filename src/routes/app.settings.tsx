@@ -10,6 +10,8 @@ import { LocationSettings } from "@/components/settings/LocationSettings";
 import { ReorderDefaults } from "@/components/settings/ReorderDefaults";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { UserManagement } from "@/components/settings/UserManagement";
+import { StoreSettings } from "@/components/settings/StoreSettings";
+import { CustomerDirectory } from "@/components/settings/CustomerDirectory";
 
 export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
@@ -36,17 +38,25 @@ function SettingsPage() {
         <p className="text-sm text-muted-foreground">System configuration and management</p>
       </div>
 
-      <Tabs defaultValue="categories" className="w-full">
+      <Tabs defaultValue="store" className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="store">Store</TabsTrigger>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="custom-fields">Custom Fields</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
-          <TabsTrigger value="reorder-defaults">Reorder Defaults</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="reorder-defaults">Reorder</TabsTrigger>
+          <TabsTrigger value="users">Staff</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
+          <TabsContent value="store">
+            <ErrorBoundary><StoreSettings /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="customers">
+            <ErrorBoundary><CustomerDirectory /></ErrorBoundary>
+          </TabsContent>
           <TabsContent value="categories">
             <ErrorBoundary><CategoryManager /></ErrorBoundary>
           </TabsContent>
