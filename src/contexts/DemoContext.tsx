@@ -54,6 +54,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const bumpVersion = useCallback(() => setVersion((v) => v + 1), []);
 
+  const updateOnboarding = useCallback((updates: Partial<OnboardingSelection>) => {
+    setOnboarding((prev) => ({ ...prev, ...updates }));
+  }, []);
+
   const value = useMemo<DemoContextValue>(
     () => ({
       isDemo: store !== null,
@@ -64,8 +68,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       bumpVersion,
       version,
       onboarding,
+      updateOnboarding,
     }),
-    [store, enterDemoMode, exitDemoMode, resetDemoData, bumpVersion, version, onboarding],
+    [store, enterDemoMode, exitDemoMode, resetDemoData, bumpVersion, version, onboarding, updateOnboarding],
   );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
