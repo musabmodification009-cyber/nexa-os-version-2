@@ -70,6 +70,9 @@ export class DemoStore {
     this.data = generateSeedData();
     this.users = SEED_USERS.map((u) => ({ ...u }));
     this.sales = [];
+    this.expenses = [];
+    this.refunds = [];
+    this.credits = new Map();
     this.version++;
   }
 
