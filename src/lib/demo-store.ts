@@ -50,6 +50,13 @@ export class DemoStore {
   private version = 0;
   private users: DemoUser[] = SEED_USERS.map((u) => ({ ...u }));
   private sales: SaleTransaction[] = [];
+  private expenses: Expense[] = [];
+  private refunds: Refund[] = [];
+  private credits: Map<string, CreditCustomer> = new Map();
+  private promos: PromoCode[] = [
+    { id: "promo-1", code: "WELCOME10", discountType: "percentage", discountValue: 10, isActive: true, usageCount: 0, maxUses: null, createdAt: new Date().toISOString() },
+    { id: "promo-2", code: "FLAT500", discountType: "flat", discountValue: 500, isActive: true, usageCount: 0, maxUses: 50, createdAt: new Date().toISOString() },
+  ];
 
   constructor() {
     this.data = generateSeedData();
