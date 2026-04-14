@@ -109,6 +109,14 @@ function DashboardPage() {
   const todayRevenue = todaySales.reduce((s, sale) => s + sale.totalNgn, 0);
   const uniqueCustomers = new Set(sales.filter((s) => s.customerPhone).map((s) => s.customerPhone)).size;
 
+  // Expense & refund metrics
+  const allExpenses = demoStore?.getExpenses() ?? [];
+  const allRefunds = demoStore?.getRefunds() ?? [];
+  const totalExpenses = allExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalRefunds = allRefunds.reduce((s, r) => s + r.amountNgn, 0);
+  const netProfit = totalRevenue - totalExpenses - totalRefunds;
+  const todayExpenses = allExpenses.filter((e) => new Date(e.date).toDateString() === new Date().toDateString()).reduce((s, e) => s + e.amount, 0);
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
       <div>
