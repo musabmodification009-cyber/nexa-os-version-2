@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart } from "lucide-react";
+import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart, TrendingDown, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
@@ -109,6 +109,14 @@ function DashboardPage() {
   const todayRevenue = todaySales.reduce((s, sale) => s + sale.totalNgn, 0);
   const uniqueCustomers = new Set(sales.filter((s) => s.customerPhone).map((s) => s.customerPhone)).size;
 
+  // Expense & refund metrics
+  const allExpenses = demoStore?.getExpenses() ?? [];
+  const allRefunds = demoStore?.getRefunds() ?? [];
+  const totalExpenses = allExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalRefunds = allRefunds.reduce((s, r) => s + r.amountNgn, 0);
+  const netProfit = totalRevenue - totalExpenses - totalRefunds;
+  const todayExpenses = allExpenses.filter((e) => new Date(e.date).toDateString() === new Date().toDateString()).reduce((s, e) => s + e.amount, 0);
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
       <div>
@@ -141,9 +149,9 @@ function DashboardPage() {
           <AccordionSection id="metrics" title="Business Overview" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total Revenue" value={`${NAIRA}${totalRevenue.toLocaleString("en-NG")}`} accentColor="healthy" icon={DollarSign} />
-              <MetricCard label="Total Transactions" value={sales.length} accentColor="neutral" icon={ShoppingCart} />
-              <MetricCard label="Active Staff" value={users.filter((u) => u.status === "active").length} accentColor="neutral" icon={Users} />
-              <MetricCard label="Unique Customers" value={uniqueCustomers} accentColor="neutral" icon={TrendingUp} />
+              <MetricCard label="Net Profit" value={`${NAIRA}${netProfit.toLocaleString("en-NG")}`} accentColor={netProfit >= 0 ? "healthy" : "danger"} icon={netProfit >= 0 ? TrendingUp : TrendingDown} />
+              <MetricCard label="Expenses" value={`${NAIRA}${totalExpenses.toLocaleString("en-NG")}`} accentColor="warning" icon={Receipt} />
+              <MetricCard label="Unique Customers" value={uniqueCustomers} accentColor="neutral" icon={Users} />
             </div>
           </AccordionSection>
 
@@ -183,12 +191,12 @@ function DashboardPage() {
       {/* ─── Manager Dashboard ─── */}
       {isManager && (
         <>
-          <AccordionSection id="metrics" title="Today's Sales" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
+          <AccordionSection id="metrics" title="Today's Performance" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Today's Revenue" value={`${NAIRA}${todayRevenue.toLocaleString("en-NG")}`} accentColor="healthy" icon={DollarSign} />
               <MetricCard label="Today's Orders" value={todaySales.length} accentColor="neutral" icon={ShoppingCart} />
-              <MetricCard label="Low Stock Items" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-              <MetricCard label="Out of Stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
+              <MetricCard label="Today's Expenses" value={`${NAIRA}${todayExpenses.toLocaleString("en-NG")}`} accentColor="warning" icon={Receipt} />
+              <MetricCard label="Net Today" value={`${NAIRA}${(todayRevenue - todayExpenses).toLocaleString("en-NG")}`} accentColor={todayRevenue - todayExpenses >= 0 ? "healthy" : "danger"} icon={todayRevenue - todayExpenses >= 0 ? TrendingUp : TrendingDown} />
             </div>
           </AccordionSection>
 

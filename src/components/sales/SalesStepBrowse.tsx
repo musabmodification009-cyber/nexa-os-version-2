@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Minus, Package, Search, X, TrendingUp, UserCheck } from "lucide-react";
+import { Plus, Minus, Package, Search, X, TrendingUp, UserCheck, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useItems, useCategories } from "@/hooks/useInventoryData";
@@ -27,7 +27,8 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
 
-  // Compute top sellers from sales history
+  const totalItems = Array.from(cart.values()).reduce((s, q) => s + q, 0);
+
   const topSellers = useMemo(() => {
     const sales = demoStore?.getSales() ?? [];
     const counts = new Map<string, number>();
@@ -43,7 +44,6 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
       .filter(Boolean);
   }, [demoStore, items]);
 
-  // Compute repeat customers
   const repeatCustomers = useMemo(() => {
     const sales = demoStore?.getSales() ?? [];
     const map = new Map<string, { name: string; phone: string; count: number }>();
@@ -51,11 +51,8 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
       if (sale.customerPhone) {
         const key = sale.customerPhone;
         const existing = map.get(key);
-        if (existing) {
-          existing.count++;
-        } else {
-          map.set(key, { name: sale.customerName ?? "Unknown", phone: key, count: 1 });
-        }
+        if (existing) existing.count++;
+        else map.set(key, { name: sale.customerName ?? "Unknown", phone: key, count: 1 });
       }
     }
     return Array.from(map.values())
@@ -64,7 +61,6 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
       .slice(0, 5);
   }, [demoStore]);
 
-  // Smart search: when empty, show top sellers
   const isSearchEmpty = !search.trim() && !activeCat;
 
   const filtered = useMemo(() => {
@@ -78,7 +74,7 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
   }, [items, search, activeCat]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col relative pb-24">
       {/* Search bar */}
       <div className="px-4 pt-3 pb-2">
         <div className="relative">
@@ -240,6 +236,26 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
           </div>
         )}
       </div>
+
+      {/* Fixed centered Sell button */}
+      {totalItems > 0 && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-6">
+          <button
+            type="button"
+            onClick={() => {
+              // Dispatch custom event for parent to catch — or use onAdd as proxy
+              const event = new CustomEvent("pos-go-to-cart");
+              window.dispatchEvent(event);
+            }}
+            className="pointer-events-auto flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-primary-foreground shadow-2xl shadow-primary/30 transition-all hover:scale-105 hover:brightness-110 active:scale-95"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            <span className="text-base font-bold">
+              Sell · {totalItems} item{totalItems !== 1 && "s"}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

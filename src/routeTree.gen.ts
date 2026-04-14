@@ -15,12 +15,15 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSalesHistoryRouteImport } from './routes/app.sales-history'
+import { Route as AppSalesAnalyticsRouteImport } from './routes/app.sales-analytics'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
+import { Route as AppReturnsRouteImport } from './routes/app.returns'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppLocationsRouteImport } from './routes/app.locations'
 import { Route as AppHelpRouteImport } from './routes/app.help'
+import { Route as AppExpensesRouteImport } from './routes/app.expenses'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCatalogRouteImport } from './routes/app.catalog'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
@@ -56,9 +59,19 @@ const AppSalesHistoryRoute = AppSalesHistoryRouteImport.update({
   path: '/sales-history',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSalesAnalyticsRoute = AppSalesAnalyticsRouteImport.update({
+  id: '/sales-analytics',
+  path: '/sales-analytics',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSalesRoute = AppSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReturnsRoute = AppReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRequestsRoute = AppRequestsRouteImport.update({
@@ -84,6 +97,11 @@ const AppLocationsRoute = AppLocationsRouteImport.update({
 const AppHelpRoute = AppHelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExpensesRoute = AppExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -114,12 +132,15 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/catalog': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/expenses': typeof AppExpensesRoute
   '/app/help': typeof AppHelpRoute
   '/app/locations': typeof AppLocationsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/requests': typeof AppRequestsRoute
+  '/app/returns': typeof AppReturnsRoute
   '/app/sales': typeof AppSalesRoute
+  '/app/sales-analytics': typeof AppSalesAnalyticsRoute
   '/app/sales-history': typeof AppSalesHistoryRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/suppliers': typeof AppSuppliersRoute
@@ -131,12 +152,15 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/catalog': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/expenses': typeof AppExpensesRoute
   '/app/help': typeof AppHelpRoute
   '/app/locations': typeof AppLocationsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/requests': typeof AppRequestsRoute
+  '/app/returns': typeof AppReturnsRoute
   '/app/sales': typeof AppSalesRoute
+  '/app/sales-analytics': typeof AppSalesAnalyticsRoute
   '/app/sales-history': typeof AppSalesHistoryRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/suppliers': typeof AppSuppliersRoute
@@ -150,12 +174,15 @@ export interface FileRoutesById {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/catalog': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/expenses': typeof AppExpensesRoute
   '/app/help': typeof AppHelpRoute
   '/app/locations': typeof AppLocationsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/requests': typeof AppRequestsRoute
+  '/app/returns': typeof AppReturnsRoute
   '/app/sales': typeof AppSalesRoute
+  '/app/sales-analytics': typeof AppSalesAnalyticsRoute
   '/app/sales-history': typeof AppSalesHistoryRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/suppliers': typeof AppSuppliersRoute
@@ -170,12 +197,15 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/catalog'
     | '/app/dashboard'
+    | '/app/expenses'
     | '/app/help'
     | '/app/locations'
     | '/app/movements'
     | '/app/purchase-orders'
     | '/app/requests'
+    | '/app/returns'
     | '/app/sales'
+    | '/app/sales-analytics'
     | '/app/sales-history'
     | '/app/settings'
     | '/app/suppliers'
@@ -187,12 +217,15 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/catalog'
     | '/app/dashboard'
+    | '/app/expenses'
     | '/app/help'
     | '/app/locations'
     | '/app/movements'
     | '/app/purchase-orders'
     | '/app/requests'
+    | '/app/returns'
     | '/app/sales'
+    | '/app/sales-analytics'
     | '/app/sales-history'
     | '/app/settings'
     | '/app/suppliers'
@@ -205,12 +238,15 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/catalog'
     | '/app/dashboard'
+    | '/app/expenses'
     | '/app/help'
     | '/app/locations'
     | '/app/movements'
     | '/app/purchase-orders'
     | '/app/requests'
+    | '/app/returns'
     | '/app/sales'
+    | '/app/sales-analytics'
     | '/app/sales-history'
     | '/app/settings'
     | '/app/suppliers'
@@ -266,11 +302,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSalesHistoryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/sales-analytics': {
+      id: '/app/sales-analytics'
+      path: '/sales-analytics'
+      fullPath: '/app/sales-analytics'
+      preLoaderRoute: typeof AppSalesAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/sales': {
       id: '/app/sales'
       path: '/sales'
       fullPath: '/app/sales'
       preLoaderRoute: typeof AppSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/returns': {
+      id: '/app/returns'
+      path: '/returns'
+      fullPath: '/app/returns'
+      preLoaderRoute: typeof AppReturnsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/requests': {
@@ -306,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/app/help'
       preLoaderRoute: typeof AppHelpRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/expenses': {
+      id: '/app/expenses'
+      path: '/expenses'
+      fullPath: '/app/expenses'
+      preLoaderRoute: typeof AppExpensesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/dashboard': {
@@ -344,12 +401,15 @@ interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppCatalogRoute: typeof AppCatalogRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppExpensesRoute: typeof AppExpensesRoute
   AppHelpRoute: typeof AppHelpRoute
   AppLocationsRoute: typeof AppLocationsRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
   AppRequestsRoute: typeof AppRequestsRoute
+  AppReturnsRoute: typeof AppReturnsRoute
   AppSalesRoute: typeof AppSalesRoute
+  AppSalesAnalyticsRoute: typeof AppSalesAnalyticsRoute
   AppSalesHistoryRoute: typeof AppSalesHistoryRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
@@ -361,12 +421,15 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppCatalogRoute: AppCatalogRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppExpensesRoute: AppExpensesRoute,
   AppHelpRoute: AppHelpRoute,
   AppLocationsRoute: AppLocationsRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
   AppRequestsRoute: AppRequestsRoute,
+  AppReturnsRoute: AppReturnsRoute,
   AppSalesRoute: AppSalesRoute,
+  AppSalesAnalyticsRoute: AppSalesAnalyticsRoute,
   AppSalesHistoryRoute: AppSalesHistoryRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSuppliersRoute: AppSuppliersRoute,
