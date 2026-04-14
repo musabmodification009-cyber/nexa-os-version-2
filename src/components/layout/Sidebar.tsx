@@ -50,6 +50,13 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Finance",
+    items: [
+      { label: "Returns", href: "/app/returns", icon: RotateCcw },
+      { label: "Expenses", href: "/app/expenses", icon: Receipt },
+    ],
+  },
+  {
     label: "Procurement",
     permKey: "canManagePOs",
     items: [
