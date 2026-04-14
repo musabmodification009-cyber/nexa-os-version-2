@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ShoppingCart, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,15 @@ export function SalesGrid() {
   const [cart, setCart] = useState<Map<string, number>>(new Map());
   const [step, setStep] = useState<StepId>("browse");
 
+  const goToCart = useCallback(() => setStep("cart"), []);
+
+  // Listen for "Sell" button click from browse step
+  useEffect(() => {
+    const handler = () => goToCart();
+    window.addEventListener("pos-go-to-cart", handler);
+    return () => window.removeEventListener("pos-go-to-cart", handler);
+  }, [goToCart]);
+
   const addToCart = (itemId: string) => {
     setCart((prev) => {
       const next = new Map(prev);
@@ -42,14 +51,11 @@ export function SalesGrid() {
     });
   };
 
-  const cartItems: CartItem[] = useMemo(() => {
-    const result: CartItem[] = [];
-    cart.forEach((qty, id) => {
-      const item = items.find((i) => i.id === id);
-      if (item) result.push({ item, quantity: qty });
-    });
-    return result;
-  }, [cart, items]);
+  const cartItems: CartItem[] = [];
+  cart.forEach((qty, id) => {
+    const item = items.find((i) => i.id === id);
+    if (item) cartItems.push({ item, quantity: qty });
+  });
 
   const totalItems = Array.from(cart.values()).reduce((s, q) => s + q, 0);
   const totalNaira = cartItems.reduce((s, ci) => s + ci.item.sellingPrice * USD_TO_NGN * ci.quantity, 0);
@@ -68,7 +74,7 @@ export function SalesGrid() {
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-lg font-semibold text-foreground">Point of Sale</h1>
           {totalItems > 0 && step === "browse" && (
-            <Button size="sm" className="gap-2" onClick={() => setStep("cart")}>
+            <Button size="sm" className="gap-2" onClick={goToCart}>
               <ShoppingCart className="h-4 w-4" />
               Cart
               <Badge variant="secondary" className="ml-0.5 h-5 min-w-5 rounded-full px-1 text-[10px]">
@@ -144,25 +150,6 @@ export function SalesGrid() {
               {NAIRA}{totalNaira.toLocaleString("en-NG", { minimumFractionDigits: 0 })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Floating bar on browse step */}
-      {step === "browse" && totalItems > 0 && (
-        <div className="border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm">
-          <button
-            type="button"
-            onClick={() => setStep("cart")}
-            className="flex w-full items-center justify-between rounded-xl bg-primary px-5 py-3 text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              <span className="font-semibold">{totalItems} item{totalItems !== 1 && "s"}</span>
-            </div>
-            <span className="text-base font-bold font-mono">
-              {NAIRA}{totalNaira.toLocaleString("en-NG", { minimumFractionDigits: 0 })}
-            </span>
-          </button>
         </div>
       )}
     </div>
