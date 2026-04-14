@@ -149,9 +149,9 @@ function DashboardPage() {
           <AccordionSection id="metrics" title="Business Overview" openSection={openSection} onToggle={toggleSection} dataTour="metrics">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total Revenue" value={`${NAIRA}${totalRevenue.toLocaleString("en-NG")}`} accentColor="healthy" icon={DollarSign} />
-              <MetricCard label="Total Transactions" value={sales.length} accentColor="neutral" icon={ShoppingCart} />
-              <MetricCard label="Active Staff" value={users.filter((u) => u.status === "active").length} accentColor="neutral" icon={Users} />
-              <MetricCard label="Unique Customers" value={uniqueCustomers} accentColor="neutral" icon={TrendingUp} />
+              <MetricCard label="Net Profit" value={`${NAIRA}${netProfit.toLocaleString("en-NG")}`} accentColor={netProfit >= 0 ? "healthy" : "danger"} icon={netProfit >= 0 ? TrendingUp : TrendingDown} />
+              <MetricCard label="Expenses" value={`${NAIRA}${totalExpenses.toLocaleString("en-NG")}`} accentColor="warning" icon={Receipt} />
+              <MetricCard label="Unique Customers" value={uniqueCustomers} accentColor="neutral" icon={Users} />
             </div>
           </AccordionSection>
 
