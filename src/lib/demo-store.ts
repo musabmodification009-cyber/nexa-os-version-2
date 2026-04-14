@@ -10,6 +10,7 @@ import type {
   SaleTransaction,
 } from "@/types/inventory";
 import { MovementType } from "@/types/inventory";
+import type { Expense, Refund, CreditCustomer, CreditTransaction, PromoCode } from "@/types/finance";
 import { generateSeedData, type SeedData } from "./demo/index";
 
 export interface ItemFilters {
