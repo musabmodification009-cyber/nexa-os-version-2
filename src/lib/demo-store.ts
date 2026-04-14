@@ -408,4 +408,82 @@ export class DemoStore {
     this.data.notificationPrefs = { ...prefs };
     this.version++;
   }
+
+  // ─── Expenses ─────────────────────────────────────────
+  getExpenses(): Expense[] {
+    return [...this.expenses].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  addExpense(expense: Expense): void {
+    this.expenses.push(expense);
+    this.version++;
+  }
+
+  deleteExpense(id: string): boolean {
+    const len = this.expenses.length;
+    this.expenses = this.expenses.filter((e) => e.id !== id);
+    if (this.expenses.length < len) { this.version++; return true; }
+    return false;
+  }
+
+  // ─── Refunds ──────────────────────────────────────────
+  getRefunds(): Refund[] {
+    return [...this.refunds].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  addRefund(refund: Refund): void {
+    this.refunds.push(refund);
+    // Restore stock
+    const item = this.data.items.find((i) => i.id === refund.itemId);
+    if (item) item.currentStock += refund.quantity;
+    this.version++;
+  }
+
+  // ─── Credits ──────────────────────────────────────────
+  getCreditCustomers(): CreditCustomer[] {
+    return Array.from(this.credits.values());
+  }
+
+  getCreditCustomer(phone: string): CreditCustomer | undefined {
+    return this.credits.get(phone);
+  }
+
+  addCreditTransaction(phone: string, name: string, txn: CreditTransaction): void {
+    let customer = this.credits.get(phone);
+    if (!customer) {
+      customer = { id: `credit-${Date.now()}`, customerName: name, customerPhone: phone, balanceNgn: 0, transactions: [] };
+      this.credits.set(phone, customer);
+    }
+    customer.transactions.push(txn);
+    if (txn.type === "credit") customer.balanceNgn += txn.amountNgn;
+    else customer.balanceNgn -= txn.amountNgn;
+    this.version++;
+  }
+
+  // ─── Promos ───────────────────────────────────────────
+  getPromos(): PromoCode[] {
+    return [...this.promos];
+  }
+
+  validatePromo(code: string): PromoCode | null {
+    const promo = this.promos.find((p) => p.code.toUpperCase() === code.toUpperCase() && p.isActive);
+    if (!promo) return null;
+    if (promo.maxUses && promo.usageCount >= promo.maxUses) return null;
+    return promo;
+  }
+
+  usePromo(code: string): void {
+    const promo = this.promos.find((p) => p.code.toUpperCase() === code.toUpperCase());
+    if (promo) { promo.usageCount++; this.version++; }
+  }
+
+  addPromo(promo: PromoCode): void {
+    this.promos.push(promo);
+    this.version++;
+  }
+
+  deletePromo(id: string): void {
+    this.promos = this.promos.filter((p) => p.id !== id);
+    this.version++;
+  }
 }
