@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart } from "lucide-react";
+import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart, TrendingDown, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
