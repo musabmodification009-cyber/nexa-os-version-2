@@ -216,18 +216,18 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
                       type="button"
                       disabled={qty === 0}
                       onClick={() => onRemove(item.id)}
-                      className="flex h-10 flex-1 items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-20"
+                      className="flex h-12 flex-1 items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive disabled:opacity-20 active:scale-90"
                     >
-                      <Minus className="h-3.5 w-3.5" />
+                      <Minus className="h-5 w-5" />
                     </button>
-                    <span className="min-w-7 text-center text-xs font-semibold font-mono">{qty}</span>
+                    <span className="min-w-8 text-center text-sm font-bold font-mono">{qty}</span>
                     <button
                       type="button"
                       disabled={qty >= item.currentStock}
                       onClick={() => onAdd(item.id)}
-                      className="flex h-10 flex-1 items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-20"
+                      className="flex h-12 flex-1 items-center justify-center text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary disabled:opacity-20 active:scale-90"
                     >
-                      <Plus className="h-3.5 w-3.5" />
+                      <Plus className="h-5 w-5" />
                     </button>
                   </div>
                 </div>

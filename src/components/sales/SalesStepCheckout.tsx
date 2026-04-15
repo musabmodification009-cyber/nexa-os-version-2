@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { User, Phone, CreditCard, Tag, Percent, Wallet } from "lucide-react";
+import { User, Phone, CreditCard, Tag, Percent, Wallet, Banknote, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useDemo } from "@/hooks/useDemo";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { Item, SaleTransaction } from "@/types/inventory";
 import type { Discount } from "@/types/finance";
 import { SalesReceipt } from "./SalesReceipt";
@@ -32,6 +33,7 @@ export function SalesStepCheckout({ items, onComplete }: SalesStepCheckoutProps)
   const [promoApplied, setPromoApplied] = useState<{ type: "percentage" | "flat"; value: number } | null>(null);
   const [discount, setDiscount] = useState<Discount | null>(null);
   const [payOnCredit, setPayOnCredit] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer" | "card">("cash");
 
   const subtotal = items.reduce((s, ci) => s + ci.item.sellingPrice * USD_TO_NGN * ci.quantity, 0);
 
@@ -63,6 +65,21 @@ export function SalesStepCheckout({ items, onComplete }: SalesStepCheckoutProps)
     }
     return map;
   }, [demoStore]);
+
+  // Auto-suggest by name too
+  const customerSuggestions = useMemo(() => {
+    if (!customerName && !customerPhone) return [];
+    const sales = demoStore?.getSales() ?? [];
+    const seen = new Map<string, { name: string; phone: string }>();
+    for (const sale of sales) {
+      if (sale.customerPhone && sale.customerName) {
+        seen.set(sale.customerPhone, { name: sale.customerName, phone: sale.customerPhone });
+      }
+    }
+    const all = Array.from(seen.values());
+    const q = (customerName || customerPhone).toLowerCase();
+    return all.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)).slice(0, 4);
+  }, [demoStore, customerName, customerPhone]);
 
   const handlePhoneChange = (value: string) => {
     setCustomerPhone(value);
@@ -155,6 +172,24 @@ export function SalesStepCheckout({ items, onComplete }: SalesStepCheckoutProps)
               <Input id="checkout-name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g. Chidi Okonkwo" className="pl-10 h-11" />
             </div>
           </div>
+          {/* Auto-suggest dropdown */}
+          {customerSuggestions.length > 0 && (customerName.length >= 2 || customerPhone.length >= 3) && (
+            <div className="rounded-lg border border-border bg-card p-1 space-y-0.5">
+              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase">Suggestions</p>
+              {customerSuggestions.map((s) => (
+                <button
+                  key={s.phone}
+                  type="button"
+                  onClick={() => { setCustomerName(s.name); setCustomerPhone(s.phone); }}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/50 transition-colors"
+                >
+                  <User className="h-3 w-3 text-muted-foreground" />
+                  <span className="font-medium">{s.name}</span>
+                  <span className="text-muted-foreground font-mono ml-auto">{s.phone}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -222,6 +257,35 @@ export function SalesStepCheckout({ items, onComplete }: SalesStepCheckoutProps)
           <Wallet className="h-4 w-4" />
           {payOnCredit ? "Paying on credit ✓" : "Add to customer credit"}
         </button>
+      </div>
+
+      <Separator className="my-4" />
+
+      {/* Payment Method */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-foreground">Payment Method</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            { id: "cash" as const, label: "Cash", icon: Banknote },
+            { id: "transfer" as const, label: "Transfer", icon: Smartphone },
+            { id: "card" as const, label: "Card", icon: CreditCard },
+          ]).map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setPaymentMethod(m.id)}
+              className={cn(
+                "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-xs font-medium transition-all",
+                paymentMethod === m.id
+                  ? "border-primary bg-primary/10 text-primary shadow-sm"
+                  : "border-border text-muted-foreground hover:border-primary/40"
+              )}
+            >
+              <m.icon className="h-5 w-5" />
+              {m.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Separator className="my-4" />
