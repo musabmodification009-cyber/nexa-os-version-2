@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Receipt,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ const navGroups: NavGroup[] = [
       { label: "Sales", href: "/app/sales", icon: ShoppingCart },
       { label: "Sales History", href: "/app/sales-history", icon: History },
       { label: "Sales Analytics", href: "/app/sales-analytics", icon: TrendingUp, permKey: "canViewAnalytics" },
+      { label: "Customers", href: "/app/customers", icon: Users },
       { label: "Catalog", href: "/app/catalog", icon: Package },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight, permKey: "canLogMovements" },
       { label: "Locations", href: "/app/locations", icon: MapPin },
