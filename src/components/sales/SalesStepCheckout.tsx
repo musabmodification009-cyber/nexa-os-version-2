@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { User, Phone, CreditCard, Tag, Percent, Wallet } from "lucide-react";
+import { User, Phone, CreditCard, Tag, Percent, Wallet, Banknote, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useDemo } from "@/hooks/useDemo";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { Item, SaleTransaction } from "@/types/inventory";
 import type { Discount } from "@/types/finance";
 import { SalesReceipt } from "./SalesReceipt";
@@ -32,6 +33,7 @@ export function SalesStepCheckout({ items, onComplete }: SalesStepCheckoutProps)
   const [promoApplied, setPromoApplied] = useState<{ type: "percentage" | "flat"; value: number } | null>(null);
   const [discount, setDiscount] = useState<Discount | null>(null);
   const [payOnCredit, setPayOnCredit] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer" | "card">("cash");
 
   const subtotal = items.reduce((s, ci) => s + ci.item.sellingPrice * USD_TO_NGN * ci.quantity, 0);
 
@@ -63,6 +65,21 @@ export function SalesStepCheckout({ items, onComplete }: SalesStepCheckoutProps)
     }
     return map;
   }, [demoStore]);
+
+  // Auto-suggest by name too
+  const customerSuggestions = useMemo(() => {
+    if (!customerName && !customerPhone) return [];
+    const sales = demoStore?.getSales() ?? [];
+    const seen = new Map<string, { name: string; phone: string }>();
+    for (const sale of sales) {
+      if (sale.customerPhone && sale.customerName) {
+        seen.set(sale.customerPhone, { name: sale.customerName, phone: sale.customerPhone });
+      }
+    }
+    const all = Array.from(seen.values());
+    const q = (customerName || customerPhone).toLowerCase();
+    return all.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)).slice(0, 4);
+  }, [demoStore, customerName, customerPhone]);
 
   const handlePhoneChange = (value: string) => {
     setCustomerPhone(value);
