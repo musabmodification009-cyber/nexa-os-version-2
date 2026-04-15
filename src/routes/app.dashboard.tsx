@@ -96,9 +96,6 @@ function DashboardPage() {
     toast.success("Tour complete! Explore freely or start the walkthrough.");
   };
 
-  const businessLabel = onboarding.businessType
-    ? onboarding.businessType.charAt(0).toUpperCase() + onboarding.businessType.slice(1)
-    : null;
 
   // Sales metrics
   const totalRevenue = sales.reduce((s, sale) => s + sale.totalNgn, 0);
