@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart, TrendingDown, Receipt } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Package, CheckCircle2, AlertTriangle, XCircle, ChevronDown, DollarSign, Users, TrendingUp, ShoppingCart, TrendingDown, Receipt, Clock, Store } from "lucide-react";
 import { toast } from "sonner";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
@@ -65,6 +65,7 @@ export const Route = createFileRoute("/app/dashboard")({
 });
 
 function DashboardPage() {
+  const navigate = useNavigate();
   const { data: summary } = useStockSummary();
   const { demoStore, isDemo, onboarding } = useDemo();
   const { isAdmin, isManager } = useRole();
@@ -117,19 +118,37 @@ function DashboardPage() {
   const netProfit = totalRevenue - totalExpenses - totalRefunds;
   const todayExpenses = allExpenses.filter((e) => new Date(e.date).toDateString() === new Date().toDateString()).reduce((s, e) => s + e.amount, 0);
 
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setCurrentTime(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const storeName = onboarding.businessType
+    ? onboarding.businessType.charAt(0).toUpperCase() + onboarding.businessType.slice(1) + " Store"
+    : "NEXA StoreOS";
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">
-          {isAdmin ? "Admin Dashboard" : "Manager Dashboard"}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isAdmin
-            ? "Business overview, staff activity & system health"
-            : businessLabel
-              ? `${businessLabel} — sales targets & inventory alerts`
-              : "Welcome back — here's your overview."}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <Store className="h-5 w-5 text-primary" />
+            <h1 className="text-2xl font-semibold text-foreground">{storeName}</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isAdmin ? "Admin Dashboard" : "Manager Dashboard"}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-medium text-foreground flex items-center gap-1.5 justify-end">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            {currentTime.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {currentTime.toLocaleDateString("en-NG", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        </div>
       </div>
 
       {onboarding.categories.length > 0 && (
