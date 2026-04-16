@@ -46,7 +46,7 @@ const navGroups: NavGroup[] = [
       { label: "Sales History", href: "/app/sales-history", icon: History },
       { label: "Sales Analytics", href: "/app/sales-analytics", icon: TrendingUp, permKey: "canViewAnalytics" },
       { label: "Customers", href: "/app/customers", icon: Users },
-      { label: "Catalog", href: "/app/catalog", icon: Package },
+      { label: "Catalog", href: "/app/catalog", icon: Package, permKey: "canManageItems" },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight, permKey: "canLogMovements" },
       { label: "Locations", href: "/app/locations", icon: MapPin },
     ],
@@ -103,6 +103,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   const isActive = (href: string) => location.pathname === href;
 
+  // Filter groups and items based on permissions — hidden, not "access denied"
   const visibleGroups = navGroups
     .filter((g) => !g.permKey || permissions[g.permKey])
     .map((g) => ({

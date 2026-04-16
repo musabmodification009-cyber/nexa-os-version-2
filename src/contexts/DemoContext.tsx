@@ -9,9 +9,11 @@ export interface OnboardingSelection {
   storeAddress: string;
   receiptFooter: string;
   taxRate: number;
+  brandColor?: string;
+  logoUrl?: string;
 }
 
-const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store", storePhone: "", storeAddress: "", receiptFooter: "Thank you for your patronage!", taxRate: 0 };
+const DEFAULT_ONBOARDING: OnboardingSelection = { businessType: null, categories: [], storeName: "My Store", storePhone: "", storeAddress: "", receiptFooter: "Thank you for your patronage!", taxRate: 0, brandColor: "#0d9488", logoUrl: "" };
 
 export interface DemoContextValue {
   isDemo: boolean;
