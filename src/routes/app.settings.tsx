@@ -12,6 +12,9 @@ import { SystemSettings } from "@/components/settings/SystemSettings";
 import { UserManagement } from "@/components/settings/UserManagement";
 import { StoreSettings } from "@/components/settings/StoreSettings";
 import { CustomerDirectory } from "@/components/settings/CustomerDirectory";
+import { StoreBranding } from "@/components/settings/StoreBranding";
+import { SmartFeatures } from "@/components/settings/SmartFeatures";
+import { TourLauncher } from "@/components/settings/TourLauncher";
 
 export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
@@ -41,18 +44,24 @@ function SettingsPage() {
       <Tabs defaultValue="store" className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="store">Store</TabsTrigger>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="custom-fields">Custom Fields</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
           <TabsTrigger value="reorder-defaults">Reorder</TabsTrigger>
+          <TabsTrigger value="smart">Smart Features</TabsTrigger>
           <TabsTrigger value="users">Staff</TabsTrigger>
+          <TabsTrigger value="help">Help</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
           <TabsContent value="store">
             <ErrorBoundary><StoreSettings /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="branding">
+            <ErrorBoundary><StoreBranding /></ErrorBoundary>
           </TabsContent>
           <TabsContent value="customers">
             <ErrorBoundary><CustomerDirectory /></ErrorBoundary>
@@ -69,8 +78,14 @@ function SettingsPage() {
           <TabsContent value="reorder-defaults">
             <ErrorBoundary><ReorderDefaults /></ErrorBoundary>
           </TabsContent>
+          <TabsContent value="smart">
+            <ErrorBoundary><SmartFeatures /></ErrorBoundary>
+          </TabsContent>
           <TabsContent value="users">
             <ErrorBoundary><UserManagement /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="help">
+            <ErrorBoundary><TourLauncher /></ErrorBoundary>
           </TabsContent>
           <TabsContent value="system">
             <ErrorBoundary><SystemSettings /></ErrorBoundary>

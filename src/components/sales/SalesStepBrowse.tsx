@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { Plus, Minus, Package, Search, X, TrendingUp, UserCheck, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,8 +26,42 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
   const { demoStore } = useDemo();
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [animatingItems, setAnimatingItems] = useState<Set<string>>(new Set());
 
   const totalItems = Array.from(cart.values()).reduce((s, q) => s + q, 0);
+  const totalNaira = useMemo(() => {
+    let sum = 0;
+    cart.forEach((qty, id) => {
+      const item = items.find((i) => i.id === id);
+      if (item) sum += item.sellingPrice * USD_TO_NGN * qty;
+    });
+    return sum;
+  }, [cart, items]);
+
+  // Long-press support
+  const longPressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startLongPress = useCallback((action: () => void) => {
+    action();
+    longPressRef.current = setInterval(action, 150);
+  }, []);
+
+  const stopLongPress = useCallback(() => {
+    if (longPressRef.current) {
+      clearInterval(longPressRef.current);
+      longPressRef.current = null;
+    }
+  }, []);
+
+  const handleAdd = useCallback((id: string) => {
+    onAdd(id);
+    setAnimatingItems((prev) => new Set(prev).add(id));
+    setTimeout(() => setAnimatingItems((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    }), 200);
+  }, [onAdd]);
 
   const topSellers = useMemo(() => {
     const sales = demoStore?.getSales() ?? [];
@@ -74,7 +108,7 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
   }, [items, search, activeCat]);
 
   return (
-    <div className="flex h-full flex-col relative pb-24">
+    <div className="flex h-full flex-col relative pb-28">
       {/* Search bar */}
       <div className="px-4 pt-3 pb-2">
         <div className="relative">
@@ -134,8 +168,8 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => onAdd(item.id)}
-                    className="shrink-0 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left hover:border-primary/40 hover:shadow-sm transition-all"
+                    onClick={() => handleAdd(item.id)}
+                    className="shrink-0 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left hover:border-primary/40 hover:shadow-sm transition-all active:scale-95"
                   >
                     <div className="h-8 w-8 rounded-md bg-muted/50 flex items-center justify-center text-sm overflow-hidden">
                       {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : "📦"}
@@ -182,12 +216,14 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
           <div className="grid grid-cols-2 gap-2.5 py-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {filtered.map((item) => {
               const qty = cart.get(item.id) ?? 0;
+              const isAnimating = animatingItems.has(item.id);
               return (
                 <div
                   key={item.id}
                   className={cn(
                     "group flex flex-col overflow-hidden rounded-xl border bg-card transition-all",
-                    qty > 0 ? "border-primary/40 shadow-md ring-1 ring-primary/20" : "border-border hover:shadow-sm"
+                    qty > 0 ? "border-primary/40 shadow-md ring-1 ring-primary/20" : "border-border hover:shadow-sm",
+                    isAnimating && "scale-[1.02]"
                   )}
                 >
                   <div className="relative aspect-square bg-muted/20">
@@ -197,7 +233,10 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
                       <div className="flex h-full w-full items-center justify-center text-2xl text-muted-foreground/15">📦</div>
                     )}
                     {qty > 0 && (
-                      <div className="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                      <div className={cn(
+                        "absolute right-1.5 top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground transition-transform",
+                        isAnimating && "scale-125"
+                      )}>
                         {qty}
                       </div>
                     )}
@@ -215,19 +254,27 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
                     <button
                       type="button"
                       disabled={qty === 0}
-                      onClick={() => onRemove(item.id)}
-                      className="flex h-12 flex-1 items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive disabled:opacity-20 active:scale-90"
+                      onMouseDown={() => startLongPress(() => onRemove(item.id))}
+                      onMouseUp={stopLongPress}
+                      onMouseLeave={stopLongPress}
+                      onTouchStart={() => startLongPress(() => onRemove(item.id))}
+                      onTouchEnd={stopLongPress}
+                      className="flex h-14 flex-1 items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive disabled:opacity-20 active:scale-90"
                     >
-                      <Minus className="h-5 w-5" />
+                      <Minus className="h-6 w-6" />
                     </button>
-                    <span className="min-w-8 text-center text-sm font-bold font-mono">{qty}</span>
+                    <span className="min-w-10 text-center text-base font-bold font-mono">{qty}</span>
                     <button
                       type="button"
                       disabled={qty >= item.currentStock}
-                      onClick={() => onAdd(item.id)}
-                      className="flex h-12 flex-1 items-center justify-center text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary disabled:opacity-20 active:scale-90"
+                      onMouseDown={() => startLongPress(() => handleAdd(item.id))}
+                      onMouseUp={stopLongPress}
+                      onMouseLeave={stopLongPress}
+                      onTouchStart={() => startLongPress(() => handleAdd(item.id))}
+                      onTouchEnd={stopLongPress}
+                      className="flex h-14 flex-1 items-center justify-center text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary disabled:opacity-20 active:scale-90"
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-6 w-6" />
                     </button>
                   </div>
                 </div>
@@ -237,25 +284,32 @@ export function SalesStepBrowse({ cart, onAdd, onRemove }: SalesStepBrowseProps)
         )}
       </div>
 
-      {/* Fixed centered Sell button */}
-      {totalItems > 0 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-6">
-          <button
-            type="button"
-            onClick={() => {
-              // Dispatch custom event for parent to catch — or use onAdd as proxy
-              const event = new CustomEvent("pos-go-to-cart");
-              window.dispatchEvent(event);
-            }}
-            className="pointer-events-auto flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-primary-foreground shadow-2xl shadow-primary/30 transition-all hover:scale-105 hover:brightness-110 active:scale-95"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            <span className="text-base font-bold">
-              Sell · {totalItems} item{totalItems !== 1 && "s"}
-            </span>
-          </button>
-        </div>
-      )}
+      {/* Fixed centered floating Sell button */}
+      <div className={cn(
+        "pointer-events-none fixed inset-x-0 bottom-16 z-40 flex justify-center pb-4 transition-all duration-300",
+        totalItems > 0 ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+      )}>
+        <button
+          type="button"
+          disabled={totalItems === 0}
+          onClick={() => {
+            const event = new CustomEvent("pos-go-to-cart");
+            window.dispatchEvent(event);
+          }}
+          className={cn(
+            "pointer-events-auto flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-primary-foreground shadow-2xl shadow-primary/30 transition-all hover:scale-105 hover:brightness-110 active:scale-95",
+            totalItems === 0 && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          <ShoppingCart className="h-5 w-5" />
+          <span className="text-base font-bold">
+            Sell · {NAIRA}{totalNaira.toLocaleString("en-NG", { minimumFractionDigits: 0 })}
+          </span>
+          <Badge variant="secondary" className="ml-1 h-6 min-w-6 rounded-full px-1.5 text-xs font-bold bg-primary-foreground/20 text-primary-foreground">
+            {totalItems}
+          </Badge>
+        </button>
+      </div>
     </div>
   );
 }
